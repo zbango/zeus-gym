@@ -43,7 +43,7 @@ const PageWrapper = forwardRef<HTMLDivElement, IPageWrapperProps>(
 			// Only redirect if protected, loading is complete, and NO authentication (template OR gym)
 			if (isProtected && !gymLoading && user === '' && !isGymAuthenticated) {
 				console.log('📄 PageWrapper: Redirecting to login - no auth found');
-				navigate(`../${demoPagesMenu.login.path}`);
+				navigate(`../auth-pages/login`);
 			}
 			return () => {};
 			// eslint-disable-next-line react-hooks/exhaustive-deps

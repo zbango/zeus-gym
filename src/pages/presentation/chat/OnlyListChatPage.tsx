@@ -93,7 +93,7 @@ const OnlyListChatPage = () => {
 						icon='Logout'
 						color='danger'
 						isLight
-						onClick={() => navigate(`../${demoPagesMenu.login.path}`)}>
+						onClick={() => navigate(`../auth-pages/login`)}>
 						Logout
 					</Button>
 				</SubHeaderRight>

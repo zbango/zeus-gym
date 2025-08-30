@@ -218,9 +218,7 @@ const WithListChatPage = () => {
 											color='danger'
 											isLight
 											className='w-100 p-3'
-											onClick={() =>
-												navigate(`../${demoPagesMenu.login.path}`)
-											}>
+											onClick={() => navigate('../auth-pages/login')}>
 											Logout
 										</Button>
 									</CardFooterLeft>
