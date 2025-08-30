@@ -374,7 +374,7 @@ const MembershipPlansPage = () => {
 							onClick={handleAddPlan}
 							style={{ borderStyle: 'dashed', borderWidth: '2px' }}>
 							<CardBody className='d-flex flex-column justify-content-center align-items-center text-center py-5'>
-								<Icon icon='Add' size='3x' color='muted' className='mb-3' />
+								<Icon icon='Add' size='3x' color='secondary' className='mb-3' />
 								<h5 className='text-muted'>{t('Add New Plan')}</h5>
 								<p className='text-muted'>{t('Create a new membership plan')}</p>
 							</CardBody>
@@ -398,11 +398,7 @@ const MembershipPlansPage = () => {
 						<ModalBody>
 							<div className='row g-3'>
 								<div className='col-md-6'>
-									<FormGroup
-										id='name'
-										label={t('Plan Name')}
-										isRequired
-										invalidFeedback={formik.errors.name}>
+									<FormGroup id='name' label={t('Plan Name')}>
 										<Input
 											name='name'
 											onChange={formik.handleChange}
@@ -416,8 +412,9 @@ const MembershipPlansPage = () => {
 									</FormGroup>
 								</div>
 								<div className='col-md-6'>
-									<FormGroup id='type' label={t('Plan Type')} isRequired>
+									<FormGroup id='type' label={t('Plan Type')}>
 										<Select
+											ariaLabel={t('Select plan type')}
 											name='type'
 											onChange={(e) => {
 												formik.handleChange(e);
@@ -435,11 +432,7 @@ const MembershipPlansPage = () => {
 									</FormGroup>
 								</div>
 								<div className='col-md-6'>
-									<FormGroup
-										id='price'
-										label={t('Price (USD)')}
-										isRequired
-										invalidFeedback={formik.errors.price}>
+									<FormGroup id='price' label={t('Price (USD)')}>
 										<Input
 											type='number'
 											name='price'
@@ -447,7 +440,7 @@ const MembershipPlansPage = () => {
 											onBlur={formik.handleBlur}
 											value={formik.values.price}
 											placeholder='45'
-											min='0'
+											min={0}
 											isValid={formik.touched.price && !formik.errors.price}
 											isTouched={
 												formik.touched.price && !!formik.errors.price
@@ -458,11 +451,7 @@ const MembershipPlansPage = () => {
 								</div>
 								<div className='col-md-6'>
 									{formik.values.type === 'monthly' ? (
-										<FormGroup
-											id='duration'
-											label={t('Duration (months)')}
-											isRequired
-											invalidFeedback={formik.errors.duration}>
+										<FormGroup id='duration' label={t('Duration (months)')}>
 											<Input
 												type='number'
 												name='duration'
@@ -470,8 +459,8 @@ const MembershipPlansPage = () => {
 												onBlur={formik.handleBlur}
 												value={formik.values.duration}
 												placeholder='1'
-												min='1'
-												max='12'
+												min={1}
+												max={12}
 												isValid={
 													formik.touched.duration &&
 													!formik.errors.duration
@@ -484,11 +473,7 @@ const MembershipPlansPage = () => {
 											/>
 										</FormGroup>
 									) : (
-										<FormGroup
-											id='visitCount'
-											label={t('Number of Visits')}
-											isRequired
-											invalidFeedback={formik.errors.visitCount}>
+										<FormGroup id='visitCount' label={t('Number of Visits')}>
 											<Input
 												type='number'
 												name='visitCount'
@@ -496,8 +481,8 @@ const MembershipPlansPage = () => {
 												onBlur={formik.handleBlur}
 												value={formik.values.visitCount}
 												placeholder='12'
-												min='1'
-												max='100'
+												min={1}
+												max={100}
 												isValid={
 													formik.touched.visitCount &&
 													!formik.errors.visitCount
@@ -512,11 +497,7 @@ const MembershipPlansPage = () => {
 									)}
 								</div>
 								<div className='col-12'>
-									<FormGroup
-										id='description'
-										label={t('Description')}
-										isRequired
-										invalidFeedback={formik.errors.description}>
+									<FormGroup id='description' label={t('Description')}>
 										<Textarea
 											name='description'
 											onChange={formik.handleChange}
@@ -566,7 +547,10 @@ const MembershipPlansPage = () => {
 																1,
 														})
 													: t('Visits: {{count}}', {
-															count: formik.values.visitCount || 1,
+															count:
+																parseInt(
+																	formik.values.visitCount,
+																) || 1,
 														})}
 												<br />
 												{formik.values.description}
