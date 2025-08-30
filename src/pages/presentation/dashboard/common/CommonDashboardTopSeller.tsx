@@ -87,16 +87,14 @@ const TableRow: FC<ITableRowProps> = ({
 		<tr>
 			<th scope='row'>{id}</th>
 			<td>
-				<Link
-					to={`../${demoPagesMenu.sales.subMenu.productID.path}/${id}`}
-					aria-label={name}>
+				<Link to={`../demoPagesMenu.gymManagement.path/${id}`} aria-label={name}>
 					<img src={image} alt='' width={54} height={54} />
 				</Link>
 			</td>
 			<td>
 				<div>
 					<Link
-						to={`../${demoPagesMenu.sales.subMenu.productID.path}/${id}`}
+						to={`../demoPagesMenu.gymManagement.path/${id}`}
 						className={classNames('fw-bold', {
 							'link-dark': !darkModeStatus,
 							'link-light': darkModeStatus,

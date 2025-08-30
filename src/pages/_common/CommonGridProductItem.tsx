@@ -165,7 +165,7 @@ const CommonGridProductItem: FC<ICommonGridProductItemProps> = ({
 					}`}
 					size='lg'
 					tag='a'
-					to={`../${demoPagesMenu.sales.subMenu.productID.path}/${id}`}>
+					to={`../demoPagesMenu.gymManagement.path/${id}`}>
 					View Product
 				</Button>
 			</CardFooter>

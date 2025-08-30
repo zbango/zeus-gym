@@ -86,7 +86,7 @@ const headers: RouteProps[] = [
 	},
 	{
 		path: `gym-management/*`,
-		element: null,
+		element: <DashboardHeader />,
 	},
 ];
 

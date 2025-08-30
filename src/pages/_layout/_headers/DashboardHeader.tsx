@@ -7,10 +7,7 @@ import CommonHeaderRight from './CommonHeaderRight';
 const DashboardHeader = () => {
 	return (
 		<Header>
-			<HeaderLeft>
-				<Search />
-			</HeaderLeft>
-			<CommonHeaderRight afterChildren={<CommonHeaderChat />} />
+			<></>
 		</Header>
 	);
 };

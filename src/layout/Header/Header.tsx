@@ -90,7 +90,7 @@ const Header: FC<IHeaderProps> = ({
 									setRightMenuStatus(false);
 								}}
 							/>
-							{hasLeftMobileMenu && (
+							{/* {hasLeftMobileMenu && (
 								<Button
 									aria-label='Toggle Left Menu'
 									className='mobile-header-toggle'
@@ -104,9 +104,9 @@ const Header: FC<IHeaderProps> = ({
 										setRightMenuStatus(false);
 									}}
 								/>
-							)}
+							)} */}
 						</div>
-						{hasRightMobileMenu && (
+						{/* {hasRightMobileMenu && (
 							<div className='col-auto'>
 								<Button
 									aria-label='Toggle Right Menu'
@@ -122,7 +122,7 @@ const Header: FC<IHeaderProps> = ({
 									}}
 								/>
 							</div>
-						)}
+						)} */}
 					</div>
 				</div>
 			</header>

@@ -85,14 +85,14 @@ const CommonTableRow: FC<ICommonTableRowProps> = ({
 			</th>
 			<th scope='row'>{id}</th>
 			<td>
-				<Link to={`../${demoPagesMenu.sales.subMenu.productID.path}/${id}`}>
+				<Link to={`../demoPagesMenu.gymManagement.path/${id}`}>
 					<img src={image} alt={name} width={54} height={54} />
 				</Link>
 			</td>
 			<td>
 				<div>
 					<Link
-						to={`../${demoPagesMenu.sales.subMenu.productID.path}/${id}`}
+						to={`../demoPagesMenu.gymManagement.path/${id}`}
 						className={classNames('fw-bold', {
 							'link-dark': !darkModeStatus,
 							'link-light': darkModeStatus,
@@ -141,7 +141,7 @@ const CommonTableRow: FC<ICommonTableRowProps> = ({
 					isLight
 					icon='Edit'
 					tag='a'
-					to={`../${demoPagesMenu.sales.subMenu.productID.path}/${id}`}
+					to={`../demoPagesMenu.gymManagement.path/${id}`}
 					aria-label='Edit'
 				/>
 			</td>
