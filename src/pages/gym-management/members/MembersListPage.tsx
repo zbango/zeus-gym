@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { useFormik } from 'formik';
+import { useNavigate } from 'react-router-dom';
 import SubHeader, { SubHeaderLeft, SubHeaderRight } from '../../../layout/SubHeader/SubHeader';
 import Icon from '../../../components/icon/Icon';
 import Button from '../../../components/bootstrap/Button';
+import Breadcrumb from '../../../components/bootstrap/Breadcrumb';
 import Page from '../../../layout/Page/Page';
 import PageWrapper from '../../../layout/PageWrapper/PageWrapper';
 import Card, {
@@ -24,14 +25,8 @@ import OffCanvas, {
 	OffCanvasHeader,
 	OffCanvasTitle,
 } from '../../../components/bootstrap/OffCanvas';
-import Modal, {
-	ModalBody,
-	ModalFooter,
-	ModalHeader,
-	ModalTitle,
-} from '../../../components/bootstrap/Modal';
-import FormGroup from '../../../components/bootstrap/forms/FormGroup';
 import Input from '../../../components/bootstrap/forms/Input';
+import FormGroup from '../../../components/bootstrap/forms/FormGroup';
 import Textarea from '../../../components/bootstrap/forms/Textarea';
 import Select from '../../../components/bootstrap/forms/Select';
 import Option from '../../../components/bootstrap/Option';
@@ -49,6 +44,7 @@ import { IMember } from '../../../types/gym-types';
 
 const MembersListPage = () => {
 	const { t } = useTranslation();
+	const navigate = useNavigate();
 	const { themeStatus, darkModeStatus } = useDarkMode();
 	const [loading, setLoading] = useState(true);
 	const [members, setMembers] = useState<IMember[]>([]);
@@ -58,11 +54,6 @@ const MembersListPage = () => {
 	// OffCanvas states
 	const [memberDetailsOffcanvas, setMemberDetailsOffcanvas] = useState(false);
 	const [selectedMember, setSelectedMember] = useState<IMember | null>(null);
-
-	// Modal states
-	const [editModalOpen, setEditModalOpen] = useState(false);
-	const [editingMember, setEditingMember] = useState<IMember | null>(null);
-	const [saving, setSaving] = useState(false);
 
 	// Load members data
 	useEffect(() => {
@@ -78,91 +69,6 @@ const MembersListPage = () => {
 	}, []);
 
 	const { items, requestSort, getClassNamesFor } = useSortableData(members);
-
-	// Edit form
-	const editFormik = useFormik({
-		initialValues: {
-			firstName: '',
-			lastName: '',
-			email: '',
-			phone: '',
-			address: '',
-			age: '',
-			height: '',
-			currentWeight: '',
-			goals: '',
-			medicalConditions: '',
-			emergencyContactName: '',
-			emergencyContactRelationship: '',
-			emergencyContactPhone: '',
-		},
-		validate: (values) => {
-			const errors: any = {};
-			if (!values.firstName) errors.firstName = t('First name is required');
-			if (!values.lastName) errors.lastName = t('Last name is required');
-			if (!values.email) errors.email = t('Email is required');
-			if (!values.phone) errors.phone = t('Phone is required');
-			if (!values.address) errors.address = t('Address is required');
-			if (!values.age) errors.age = t('Age is required');
-			if (!values.height) errors.height = t('Height is required');
-			if (!values.currentWeight) errors.currentWeight = t('Weight is required');
-			if (!values.emergencyContactName)
-				errors.emergencyContactName = t('Emergency contact name is required');
-			if (!values.emergencyContactPhone)
-				errors.emergencyContactPhone = t('Emergency contact phone is required');
-			return errors;
-		},
-		onSubmit: async (values) => {
-			if (!editingMember) return;
-
-			setSaving(true);
-			try {
-				// Simulate API call
-				await new Promise((resolve) => setTimeout(resolve, 1500));
-
-				const updatedMember: IMember = {
-					...editingMember,
-					personalInfo: {
-						...editingMember.personalInfo,
-						firstName: values.firstName,
-						lastName: values.lastName,
-						email: values.email,
-						phone: values.phone,
-						address: values.address,
-						emergencyContact: {
-							name: values.emergencyContactName,
-							relationship: values.emergencyContactRelationship,
-							phone: values.emergencyContactPhone,
-						},
-					},
-					healthInfo: {
-						...editingMember.healthInfo,
-						age: parseInt(values.age),
-						height: parseInt(values.height),
-						currentWeight: parseInt(values.currentWeight),
-						goals: values.goals,
-						medicalConditions: values.medicalConditions || undefined,
-					},
-				};
-
-				setMembers((prev) =>
-					prev.map((member) => (member.id === editingMember.id ? updatedMember : member)),
-				);
-
-				// Update selected member if it's being viewed
-				if (selectedMember?.id === editingMember.id) {
-					setSelectedMember(updatedMember);
-				}
-
-				setEditModalOpen(false);
-				setEditingMember(null);
-			} catch (error) {
-				alert(t('Failed to update member. Please try again.'));
-			} finally {
-				setSaving(false);
-			}
-		},
-	});
 
 	// Utility functions
 	const getStatusColor = (status: string) => {
@@ -192,23 +98,7 @@ const MembersListPage = () => {
 	};
 
 	const handleEditMember = (member: IMember) => {
-		setEditingMember(member);
-		editFormik.setValues({
-			firstName: member.personalInfo.firstName,
-			lastName: member.personalInfo.lastName,
-			email: member.personalInfo.email,
-			phone: member.personalInfo.phone,
-			address: member.personalInfo.address,
-			age: member.healthInfo.age.toString(),
-			height: member.healthInfo.height.toString(),
-			currentWeight: member.healthInfo.currentWeight.toString(),
-			goals: member.healthInfo.goals,
-			medicalConditions: member.healthInfo.medicalConditions || '',
-			emergencyContactName: member.personalInfo.emergencyContact.name,
-			emergencyContactRelationship: member.personalInfo.emergencyContact.relationship,
-			emergencyContactPhone: member.personalInfo.emergencyContact.phone,
-		});
-		setEditModalOpen(true);
+		navigate(`/gym-management/members/edit/${member.id}`);
 	};
 
 	const handleStatusChange = async (memberId: string, newStatus: string) => {
@@ -274,18 +164,22 @@ const MembersListPage = () => {
 	}
 
 	return (
-		<PageWrapper title={t('Members List')}>
+		<PageWrapper title={t('Members List')} className='pt-4'>
 			<SubHeader>
 				<SubHeaderLeft>
-					<Icon icon='Group' className='me-2' size='2x' />
-					<span className='text-muted'>
-						{t('Managing {{count}} total members.', { count: members.length })}{' '}
-						<Icon icon='CheckCircle' color='success' className='mx-1' size='lg' />
-						{t('{{count}} active members.', {
-							count: members.filter((m) => m.membershipInfo.status === 'active')
-								.length,
-						})}
-					</span>
+					<Breadcrumb
+						list={[
+							{
+								title: t('Dashboard'),
+								to: '/gym-management/dashboard',
+							},
+							{
+								title: t('Members'),
+								to: '/gym-management/members/list',
+							},
+						]}
+						isToHome={false}
+					/>
 				</SubHeaderLeft>
 				<SubHeaderRight>
 					<Button
@@ -313,15 +207,17 @@ const MembersListPage = () => {
 							</CardTitle>
 						</CardLabel>
 						<CardActions>
-							<Input
-								type='search'
-								placeholder={t('Search members...')}
-								className='me-2'
-								style={{ width: '250px' }}
-							/>
-							<Button color='info' icon='FilterList' isLight>
-								{t('Filters')}
-							</Button>
+							<div className='d-flex align-items-center'>
+								<Input
+									type='search'
+									placeholder={t('Search members...')}
+									className='me-2'
+									style={{ width: '250px' }}
+								/>
+								<Button color='info' icon='FilterList' isLight>
+									{t('Filters')}
+								</Button>
+							</div>
 						</CardActions>
 					</CardHeader>
 					<CardBody className='table-responsive' isScrollable>
@@ -607,7 +503,7 @@ const MembersListPage = () => {
 					</CardBody>
 					<PaginationButtons
 						data={items}
-						label='members'
+						label='miembros'
 						setCurrentPage={setCurrentPage}
 						currentPage={currentPage}
 						perPage={perPage}
@@ -840,378 +736,10 @@ const MembersListPage = () => {
 										</CardBody>
 									</Card>
 								</div>
-
-								{/* Emergency Contact */}
-								<div className='col-12'>
-									<Card>
-										<CardHeader>
-											<CardLabel icon='ContactPhone' iconColor='warning'>
-												<CardTitle>{t('Emergency Contact')}</CardTitle>
-											</CardLabel>
-										</CardHeader>
-										<CardBody>
-											<div className='row g-3'>
-												<div className='col-md-6'>
-													<FormGroup label={t('Name')}>
-														<Input
-															value={
-																selectedMember.personalInfo
-																	.emergencyContact.name
-															}
-															readOnly
-														/>
-													</FormGroup>
-												</div>
-												<div className='col-md-6'>
-													<FormGroup label={t('Relationship')}>
-														<Input
-															value={
-																selectedMember.personalInfo
-																	.emergencyContact.relationship
-															}
-															readOnly
-														/>
-													</FormGroup>
-												</div>
-												<div className='col-12'>
-													<FormGroup label={t('Phone')}>
-														<Input
-															value={
-																selectedMember.personalInfo
-																	.emergencyContact.phone
-															}
-															readOnly
-														/>
-													</FormGroup>
-												</div>
-											</div>
-										</CardBody>
-									</Card>
-								</div>
 							</div>
 						)}
 					</OffCanvasBody>
 				</OffCanvas>
-
-				{/* Edit Member Modal */}
-				<Modal
-					setIsOpen={setEditModalOpen}
-					isOpen={editModalOpen}
-					titleId='editMemberModal'
-					size='xl'
-					isScrollable>
-					<ModalHeader setIsOpen={setEditModalOpen}>
-						<ModalTitle id='editMemberModal'>
-							{t('Edit Member: {{name}}', {
-								name: `${editingMember?.personalInfo.firstName} ${editingMember?.personalInfo.lastName}`,
-							})}
-						</ModalTitle>
-					</ModalHeader>
-					<form onSubmit={editFormik.handleSubmit}>
-						<ModalBody>
-							<div className='row g-4'>
-								{/* Personal Information */}
-								<div className='col-12'>
-									<h6 className='mb-3'>
-										<Icon icon='Person' className='me-2' />
-										{t('Personal Information')}
-									</h6>
-									<div className='row g-3'>
-										<div className='col-md-6'>
-											<FormGroup label={t('First Name')}>
-												<Input
-													name='firstName'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.firstName}
-													isValid={
-														editFormik.touched.firstName &&
-														!editFormik.errors.firstName
-													}
-													isTouched={
-														editFormik.touched.firstName &&
-														!!editFormik.errors.firstName
-													}
-													invalidFeedback={editFormik.errors.firstName}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-md-6'>
-											<FormGroup label={t('Last Name')}>
-												<Input
-													name='lastName'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.lastName}
-													isValid={
-														editFormik.touched.lastName &&
-														!editFormik.errors.lastName
-													}
-													isTouched={
-														editFormik.touched.lastName &&
-														!!editFormik.errors.lastName
-													}
-													invalidFeedback={editFormik.errors.lastName}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-md-6'>
-											<FormGroup label={t('Email')}>
-												<Input
-													type='email'
-													name='email'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.email}
-													isValid={
-														editFormik.touched.email &&
-														!editFormik.errors.email
-													}
-													isTouched={
-														editFormik.touched.email &&
-														!!editFormik.errors.email
-													}
-													invalidFeedback={editFormik.errors.email}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-md-6'>
-											<FormGroup label={t('Phone')}>
-												<Input
-													name='phone'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.phone}
-													placeholder='+593 99 999 9999'
-													isValid={
-														editFormik.touched.phone &&
-														!editFormik.errors.phone
-													}
-													isTouched={
-														editFormik.touched.phone &&
-														!!editFormik.errors.phone
-													}
-													invalidFeedback={editFormik.errors.phone}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-12'>
-											<FormGroup label={t('Address')}>
-												<Textarea
-													name='address'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.address}
-													rows={2}
-													isValid={
-														editFormik.touched.address &&
-														!editFormik.errors.address
-													}
-													isTouched={
-														editFormik.touched.address &&
-														!!editFormik.errors.address
-													}
-													invalidFeedback={editFormik.errors.address}
-												/>
-											</FormGroup>
-										</div>
-									</div>
-								</div>
-
-								{/* Health Information */}
-								<div className='col-12'>
-									<h6 className='mb-3'>
-										<Icon icon='FitnessCenter' className='me-2' />
-										{t('Health & Fitness')}
-									</h6>
-									<div className='row g-3'>
-										<div className='col-md-4'>
-											<FormGroup label={t('Age')}>
-												<Input
-													type='number'
-													name='age'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.age}
-													min={16}
-													max={100}
-													isValid={
-														editFormik.touched.age &&
-														!editFormik.errors.age
-													}
-													isTouched={
-														editFormik.touched.age &&
-														!!editFormik.errors.age
-													}
-													invalidFeedback={editFormik.errors.age}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-md-4'>
-											<FormGroup label={t('Height (cm)')}>
-												<Input
-													type='number'
-													name='height'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.height}
-													min={120}
-													max={250}
-													isValid={
-														editFormik.touched.height &&
-														!editFormik.errors.height
-													}
-													isTouched={
-														editFormik.touched.height &&
-														!!editFormik.errors.height
-													}
-													invalidFeedback={editFormik.errors.height}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-md-4'>
-											<FormGroup label={t('Weight (kg)')}>
-												<Input
-													type='number'
-													name='currentWeight'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.currentWeight}
-													min={30}
-													max={300}
-													isValid={
-														editFormik.touched.currentWeight &&
-														!editFormik.errors.currentWeight
-													}
-													isTouched={
-														editFormik.touched.currentWeight &&
-														!!editFormik.errors.currentWeight
-													}
-													invalidFeedback={
-														editFormik.errors.currentWeight
-													}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-12'>
-											<FormGroup label={t('Goals')}>
-												<Textarea
-													name='goals'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.goals}
-													rows={2}
-													placeholder={t(
-														'Fitness goals and objectives...',
-													)}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-12'>
-											<FormGroup label={t('Medical Conditions (Optional)')}>
-												<Textarea
-													name='medicalConditions'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.medicalConditions}
-													rows={2}
-													placeholder={t(
-														'Any medical conditions or allergies...',
-													)}
-												/>
-											</FormGroup>
-										</div>
-									</div>
-								</div>
-
-								{/* Emergency Contact */}
-								<div className='col-12'>
-									<h6 className='mb-3'>
-										<Icon icon='ContactPhone' className='me-2' />
-										{t('Emergency Contact')}
-									</h6>
-									<div className='row g-3'>
-										<div className='col-md-6'>
-											<FormGroup label={t('Name')}>
-												<Input
-													name='emergencyContactName'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.emergencyContactName}
-													isValid={
-														editFormik.touched.emergencyContactName &&
-														!editFormik.errors.emergencyContactName
-													}
-													isTouched={
-														editFormik.touched.emergencyContactName &&
-														!!editFormik.errors.emergencyContactName
-													}
-													invalidFeedback={
-														editFormik.errors.emergencyContactName
-													}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-md-6'>
-											<FormGroup label={t('Relationship')}>
-												<Input
-													name='emergencyContactRelationship'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={
-														editFormik.values
-															.emergencyContactRelationship
-													}
-													placeholder={t('e.g., Father, Mother, Spouse')}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-12'>
-											<FormGroup label={t('Phone')}>
-												<Input
-													name='emergencyContactPhone'
-													onChange={editFormik.handleChange}
-													onBlur={editFormik.handleBlur}
-													value={editFormik.values.emergencyContactPhone}
-													placeholder='+593 99 999 9999'
-													isValid={
-														editFormik.touched.emergencyContactPhone &&
-														!editFormik.errors.emergencyContactPhone
-													}
-													isTouched={
-														editFormik.touched.emergencyContactPhone &&
-														!!editFormik.errors.emergencyContactPhone
-													}
-													invalidFeedback={
-														editFormik.errors.emergencyContactPhone
-													}
-												/>
-											</FormGroup>
-										</div>
-									</div>
-								</div>
-							</div>
-						</ModalBody>
-						<ModalFooter>
-							<Button
-								color='secondary'
-								onClick={() => {
-									setEditModalOpen(false);
-									setEditingMember(null);
-								}}>
-								{t('Cancel')}
-							</Button>
-							<Button
-								type='submit'
-								color='primary'
-								icon='Save'
-								isDisable={!editFormik.isValid || saving}>
-								{saving && <Spinner isSmall inButton />}
-								{t('Save Changes')}
-							</Button>
-						</ModalFooter>
-					</form>
-				</Modal>
 			</Page>
 		</PageWrapper>
 	);

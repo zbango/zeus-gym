@@ -79,7 +79,7 @@ const PaginationButtons: FC<IPaginationButtonsProps> = ({
 
 		return (
 			<span className='pagination__desc'>
-				Showing {start} to {end > totalItems ? totalItems : end} of {totalItems} {label}
+				Mostrando {start} - {end > totalItems ? totalItems : end} de {totalItems} {label}
 			</span>
 		);
 	};

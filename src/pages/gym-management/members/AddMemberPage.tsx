@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import SubHeader, { SubHeaderLeft, SubHeaderRight } from '../../../layout/SubHeader/SubHeader';
@@ -21,44 +21,85 @@ import Select from '../../../components/bootstrap/forms/Select';
 import Option from '../../../components/bootstrap/Option';
 import Spinner from '../../../components/bootstrap/Spinner';
 import Alert from '../../../components/bootstrap/Alert';
-import { mockMembershipPlans } from '../../../common/data/gymMockData';
+import { mockMembershipPlans, mockMembers } from '../../../common/data/gymMockData';
 import { IMember } from '../../../types/gym-types';
 
 const AddMemberPage = () => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
+	const { id } = useParams<{ id?: string }>();
 	const [saving, setSaving] = useState(false);
+	const [loading, setLoading] = useState(false);
 	const [alert, setAlert] = useState<{
 		type: 'success' | 'warning' | 'danger';
 		message: string;
 	} | null>(null);
 
+	const isEditMode = Boolean(id);
+	const pageTitle = isEditMode ? t('Edit Member') : t('Add New Member');
+	const [initialValues, setInitialValues] = useState({
+		// Personal Information
+		firstName: '',
+		lastName: '',
+		email: '',
+		phone: '',
+		address: '',
+
+		// Emergency Contact
+		emergencyName: '',
+		emergencyPhone: '',
+		emergencyRelationship: '',
+
+		// Health Information
+		age: '',
+		height: '',
+		currentWeight: '',
+		medicalConditions: '',
+		goals: '',
+
+		// Membership Information
+		membershipPlan: '',
+		membershipType: 'monthly' as 'monthly' | 'count-based',
+		startDate: dayjs().format('YYYY-MM-DD'),
+	});
+
+	// Load member data for editing
+	useEffect(() => {
+		if (isEditMode && id) {
+			setLoading(true);
+			// Simulate API call to get member data
+			const loadMemberData = async () => {
+				await new Promise((resolve) => setTimeout(resolve, 500));
+				const member = mockMembers.find((m) => m.id === id);
+				if (member) {
+					setInitialValues({
+						firstName: member.personalInfo.firstName,
+						lastName: member.personalInfo.lastName,
+						email: member.personalInfo.email,
+						phone: member.personalInfo.phone,
+						address: member.personalInfo.address,
+						emergencyName: member.personalInfo.emergencyContact.name,
+						emergencyPhone: member.personalInfo.emergencyContact.phone,
+						emergencyRelationship: member.personalInfo.emergencyContact.relationship,
+						age: member.healthInfo.age.toString(),
+						height: member.healthInfo.height.toString(),
+						currentWeight: member.healthInfo.currentWeight.toString(),
+						medicalConditions: member.healthInfo.medicalConditions || '',
+						goals: member.healthInfo.goals || '',
+						membershipPlan: member.membershipInfo.plan,
+						membershipType: member.membershipInfo.type,
+						startDate: member.membershipInfo.startDate,
+					});
+				}
+				setLoading(false);
+			};
+			loadMemberData();
+		}
+	}, [id, isEditMode]);
+
 	const formik = useFormik({
-		initialValues: {
-			// Personal Information
-			firstName: '',
-			lastName: '',
-			email: '',
-			phone: '',
-			address: '',
-
-			// Emergency Contact
-			emergencyName: '',
-			emergencyPhone: '',
-			emergencyRelationship: '',
-
-			// Health Information
-			age: '',
-			height: '',
-			currentWeight: '',
-			medicalConditions: '',
-			goals: '',
-
-			// Membership Information
-			membershipPlan: '',
-			membershipType: 'monthly' as 'monthly' | 'count-based',
-			startDate: dayjs().format('YYYY-MM-DD'),
-		},
+		initialValues,
+		enableReinitialize: true,
 		validate: (values) => {
 			const errors: any = {};
 
@@ -116,65 +157,125 @@ const AddMemberPage = () => {
 					throw new Error('Invalid membership plan selected');
 				}
 
-				// Create new member object
-				const newMember: IMember = {
-					id: `member-${Date.now()}`,
-					personalInfo: {
-						firstName: values.firstName,
-						lastName: values.lastName,
-						email: values.email,
-						phone: values.phone,
-						address: values.address,
-						emergencyContact: {
-							name: values.emergencyName,
-							phone: values.emergencyPhone,
-							relationship: values.emergencyRelationship,
-						},
-					},
-					healthInfo: {
-						age: parseInt(values.age),
-						height: parseInt(values.height),
-						currentWeight: parseInt(values.currentWeight),
-						medicalConditions: values.medicalConditions || 'Ninguna',
-						goals: values.goals || 'Mantenerse en forma',
-					},
-					progressTracking: {
-						measurements: [
-							{
-								date: dayjs().format('YYYY-MM-DD'),
-								weight: parseInt(values.currentWeight),
-								notes: 'Medición inicial al registro',
+				if (isEditMode && id) {
+					// Update existing member
+					const updatedMember: IMember = {
+						id: id,
+						personalInfo: {
+							firstName: values.firstName,
+							lastName: values.lastName,
+							email: values.email,
+							phone: values.phone,
+							address: values.address,
+							emergencyContact: {
+								name: values.emergencyName,
+								phone: values.emergencyPhone,
+								relationship: values.emergencyRelationship,
 							},
-						],
-					},
-					membershipInfo: {
-						type: selectedPlan.type,
-						plan: selectedPlan.name,
-						startDate: values.startDate,
-						endDate:
-							selectedPlan.type === 'monthly'
-								? dayjs(values.startDate)
-										.add(selectedPlan.duration || 1, 'month')
-										.format('YYYY-MM-DD')
-								: undefined,
-						remainingVisits:
-							selectedPlan.type === 'count-based'
-								? selectedPlan.visitCount
-								: undefined,
-						status: 'active',
-					},
-					registrationDate: dayjs().format('YYYY-MM-DD'),
-				};
+						},
+						healthInfo: {
+							age: parseInt(values.age),
+							height: parseInt(values.height),
+							currentWeight: parseInt(values.currentWeight),
+							medicalConditions: values.medicalConditions || 'Ninguna',
+							goals: values.goals || 'Mantenerse en forma',
+						},
+						progressTracking: {
+							measurements: [
+								{
+									date: dayjs().format('YYYY-MM-DD'),
+									weight: parseInt(values.currentWeight),
+									notes: 'Medición actualizada',
+								},
+							],
+						},
+						membershipInfo: {
+							type: selectedPlan.type,
+							plan: selectedPlan.name,
+							startDate: values.startDate,
+							endDate:
+								selectedPlan.type === 'monthly'
+									? dayjs(values.startDate)
+											.add(selectedPlan.duration || 1, 'month')
+											.format('YYYY-MM-DD')
+									: undefined,
+							remainingVisits:
+								selectedPlan.type === 'count-based'
+									? selectedPlan.visitCount
+									: undefined,
+							status: 'active',
+						},
+						registrationDate: dayjs().format('YYYY-MM-DD'),
+					};
 
-				// Here you would normally save to your backend
-				console.log('New member created:', newMember);
+					console.log('Member updated:', updatedMember);
 
-				setAlert({
-					type: 'success',
-					message: t('Member {{name}} has been successfully registered!', {
-						name: `${values.firstName} ${values.lastName}`,
-					}),
-				});
+					setAlert({
+						type: 'success',
+						message: t('Member {{name}} has been successfully updated!', {
+							name: `${values.firstName} ${values.lastName}`,
+						}),
+					});
+				} else {
+					// Create new member
+					const newMember: IMember = {
+						id: `member-${Date.now()}`,
+						personalInfo: {
+							firstName: values.firstName,
+							lastName: values.lastName,
+							email: values.email,
+							phone: values.phone,
+							address: values.address,
+							emergencyContact: {
+								name: values.emergencyName,
+								phone: values.emergencyPhone,
+								relationship: values.emergencyRelationship,
+							},
+						},
+						healthInfo: {
+							age: parseInt(values.age),
+							height: parseInt(values.height),
+							currentWeight: parseInt(values.currentWeight),
+							medicalConditions: values.medicalConditions || 'Ninguna',
+							goals: values.goals || 'Mantenerse en forma',
+						},
+						progressTracking: {
+							measurements: [
+								{
+									date: dayjs().format('YYYY-MM-DD'),
+									weight: parseInt(values.currentWeight),
+									notes: 'Medición inicial al registro',
+								},
+							],
+						},
+						membershipInfo: {
+							type: selectedPlan.type,
+							plan: selectedPlan.name,
+							startDate: values.startDate,
+							endDate:
+								selectedPlan.type === 'monthly'
+									? dayjs(values.startDate)
+											.add(selectedPlan.duration || 1, 'month')
+											.format('YYYY-MM-DD')
+									: undefined,
+							remainingVisits:
+								selectedPlan.type === 'count-based'
+									? selectedPlan.visitCount
+									: undefined,
+							status: 'active',
+						},
+						registrationDate: dayjs().format('YYYY-MM-DD'),
+					};
+
+					console.log('New member created:', newMember);
+
+					setAlert({
+						type: 'success',
+						message: t('Member {{name}} has been successfully registered!', {
+							name: `${values.firstName} ${values.lastName}`,
+						}),
+					});
+				}
 
 				// Redirect after 2 seconds
 				setTimeout(() => {
@@ -183,7 +284,7 @@ const AddMemberPage = () => {
 			} catch (error) {
 				setAlert({
 					type: 'danger',
-					message: t('An error occurred while registering the member. Please try again.'),
+					message: t('An error occurred while saving the member. Please try again.'),
 				});
 			} finally {
 				setSaving(false);
@@ -191,12 +292,31 @@ const AddMemberPage = () => {
 		},
 	});
 
+	if (loading) {
+		return (
+			<PageWrapper title={pageTitle}>
+				<div
+					className='d-flex justify-content-center align-items-center'
+					style={{ minHeight: '60vh' }}>
+					<div className='text-center'>
+						<Spinner size='3rem' className='mb-3' />
+						<div className='h5'>{t('Loading member data...')}</div>
+					</div>
+				</div>
+			</PageWrapper>
+		);
+	}
+
 	return (
-		<PageWrapper title={t('Add New Member')}>
+		<PageWrapper title={pageTitle}>
 			<SubHeader>
 				<SubHeaderLeft>
-					<Icon icon='PersonAdd' className='me-2' size='2x' />
-					<span className='text-muted'>{t('Register a new gym member')}</span>
+					<Icon icon={isEditMode ? 'Edit' : 'PersonAdd'} className='me-2' size='2x' />
+					<span className='text-muted'>
+						{isEditMode
+							? t('Edit gym member information')
+							: t('Register a new gym member')}
+					</span>
 				</SubHeaderLeft>
 				<SubHeaderRight>
 					<Button
@@ -232,13 +352,7 @@ const AddMemberPage = () => {
 								<CardBody>
 									<div className='row g-3'>
 										<div className='col-md-6'>
-											<FormGroup
-												id='firstName'
-												label={t('First Name')}
-												isRequired
-												isValid={formik.isValid}
-												isTouched={formik.touched.firstName}
-												invalidFeedback={formik.errors.firstName}>
+											<FormGroup id='firstName' label={t('First Name')}>
 												<Input
 													name='firstName'
 													onChange={formik.handleChange}
@@ -254,13 +368,7 @@ const AddMemberPage = () => {
 											</FormGroup>
 										</div>
 										<div className='col-md-6'>
-											<FormGroup
-												id='lastName'
-												label={t('Last Name')}
-												isRequired
-												isValid={formik.isValid}
-												isTouched={formik.touched.lastName}
-												invalidFeedback={formik.errors.lastName}>
+											<FormGroup id='lastName' label={t('Last Name')}>
 												<Input
 													name='lastName'
 													onChange={formik.handleChange}
@@ -276,13 +384,7 @@ const AddMemberPage = () => {
 											</FormGroup>
 										</div>
 										<div className='col-md-6'>
-											<FormGroup
-												id='email'
-												label={t('Email')}
-												isRequired
-												isValid={formik.isValid}
-												isTouched={formik.touched.email}
-												invalidFeedback={formik.errors.email}>
+											<FormGroup id='email' label={t('Email')}>
 												<Input
 													type='email'
 													name='email'
@@ -299,13 +401,7 @@ const AddMemberPage = () => {
 											</FormGroup>
 										</div>
 										<div className='col-md-6'>
-											<FormGroup
-												id='phone'
-												label={t('Phone')}
-												isRequired
-												isValid={formik.isValid}
-												isTouched={formik.touched.phone}
-												invalidFeedback={formik.errors.phone}>
+											<FormGroup id='phone' label={t('Phone')}>
 												<Input
 													type='tel'
 													name='phone'
@@ -350,21 +446,15 @@ const AddMemberPage = () => {
 								<CardBody>
 									<div className='row g-3'>
 										<div className='col-md-4'>
-											<FormGroup
-												id='age'
-												label={t('Age')}
-												isRequired
-												isValid={formik.isValid}
-												isTouched={formik.touched.age}
-												invalidFeedback={formik.errors.age}>
+											<FormGroup id='age' label={t('Age')}>
 												<Input
 													type='number'
 													name='age'
 													onChange={formik.handleChange}
 													onBlur={formik.handleBlur}
 													value={formik.values.age}
-													min='16'
-													max='80'
+													min={16}
+													max={80}
 													isValid={formik.isValid}
 													isTouched={
 														formik.touched.age && !!formik.errors.age
@@ -374,21 +464,15 @@ const AddMemberPage = () => {
 											</FormGroup>
 										</div>
 										<div className='col-md-4'>
-											<FormGroup
-												id='height'
-												label={t('Height (cm)')}
-												isRequired
-												isValid={formik.isValid}
-												isTouched={formik.touched.height}
-												invalidFeedback={formik.errors.height}>
+											<FormGroup id='height' label={t('Height (cm)')}>
 												<Input
 													type='number'
 													name='height'
 													onChange={formik.handleChange}
 													onBlur={formik.handleBlur}
 													value={formik.values.height}
-													min='140'
-													max='220'
+													min={140}
+													max={220}
 													isValid={formik.isValid}
 													isTouched={
 														formik.touched.height &&
@@ -399,21 +483,15 @@ const AddMemberPage = () => {
 											</FormGroup>
 										</div>
 										<div className='col-md-4'>
-											<FormGroup
-												id='currentWeight'
-												label={t('Weight (kg)')}
-												isRequired
-												isValid={formik.isValid}
-												isTouched={formik.touched.currentWeight}
-												invalidFeedback={formik.errors.currentWeight}>
+											<FormGroup id='currentWeight' label={t('Weight (kg)')}>
 												<Input
 													type='number'
 													name='currentWeight'
 													onChange={formik.handleChange}
 													onBlur={formik.handleBlur}
 													value={formik.values.currentWeight}
-													min='40'
-													max='200'
+													min={40}
+													max={200}
 													isValid={formik.isValid}
 													isTouched={
 														formik.touched.currentWeight &&
@@ -456,82 +534,8 @@ const AddMemberPage = () => {
 							</Card>
 						</div>
 
-						{/* Emergency Contact */}
-						<div className='col-lg-6'>
-							<Card>
-								<CardHeader>
-									<CardLabel icon='ContactPhone' iconColor='warning'>
-										<CardTitle>{t('Emergency Contact')}</CardTitle>
-									</CardLabel>
-								</CardHeader>
-								<CardBody>
-									<div className='row g-3'>
-										<div className='col-md-6'>
-											<FormGroup
-												id='emergencyName'
-												label={t('Contact Name')}
-												isRequired
-												isValid={formik.isValid}
-												isTouched={formik.touched.emergencyName}
-												invalidFeedback={formik.errors.emergencyName}>
-												<Input
-													name='emergencyName'
-													onChange={formik.handleChange}
-													onBlur={formik.handleBlur}
-													value={formik.values.emergencyName}
-													isValid={formik.isValid}
-													isTouched={
-														formik.touched.emergencyName &&
-														!!formik.errors.emergencyName
-													}
-													invalidFeedback={formik.errors.emergencyName}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-md-6'>
-											<FormGroup
-												id='emergencyRelationship'
-												label={t('Relationship')}>
-												<Input
-													name='emergencyRelationship'
-													onChange={formik.handleChange}
-													onBlur={formik.handleBlur}
-													value={formik.values.emergencyRelationship}
-													placeholder={t('Spouse, Parent, Sibling, etc.')}
-												/>
-											</FormGroup>
-										</div>
-										<div className='col-12'>
-											<FormGroup
-												id='emergencyPhone'
-												label={t('Emergency Phone')}
-												isRequired
-												isValid={formik.isValid}
-												isTouched={formik.touched.emergencyPhone}
-												invalidFeedback={formik.errors.emergencyPhone}>
-												<Input
-													type='tel'
-													name='emergencyPhone'
-													onChange={formik.handleChange}
-													onBlur={formik.handleBlur}
-													value={formik.values.emergencyPhone}
-													placeholder='+593 999 123 456'
-													isValid={formik.isValid}
-													isTouched={
-														formik.touched.emergencyPhone &&
-														!!formik.errors.emergencyPhone
-													}
-													invalidFeedback={formik.errors.emergencyPhone}
-												/>
-											</FormGroup>
-										</div>
-									</div>
-								</CardBody>
-							</Card>
-						</div>
-
 						{/* Membership Information */}
-						<div className='col-lg-6'>
+						<div className='col-lg-12'>
 							<Card>
 								<CardHeader>
 									<CardLabel icon='CardMembership' iconColor='info'>
@@ -543,16 +547,13 @@ const AddMemberPage = () => {
 										<div className='col-12'>
 											<FormGroup
 												id='membershipPlan'
-												label={t('Membership Plan')}
-												isRequired
-												isValid={formik.isValid}
-												isTouched={formik.touched.membershipPlan}
-												invalidFeedback={formik.errors.membershipPlan}>
+												label={t('Membership Plan')}>
 												<Select
 													name='membershipPlan'
 													onChange={formik.handleChange}
 													onBlur={formik.handleBlur}
 													value={formik.values.membershipPlan}
+													ariaLabel={t('Select membership plan')}
 													isValid={formik.isValid}
 													isTouched={
 														formik.touched.membershipPlan &&
@@ -566,16 +567,19 @@ const AddMemberPage = () => {
 														.filter((plan) => plan.isActive)
 														.map((plan) => (
 															<Option key={plan.id} value={plan.id}>
-																{plan.name} - $
-																{plan.price.toLocaleString()} (
-																{plan.type === 'monthly'
-																	? t('{{duration}} month(s)', {
-																			duration: plan.duration,
-																		})
-																	: t('{{count}} visits', {
-																			count: plan.visitCount,
-																		})}
-																)
+																{`${plan.name} - $${plan.price.toLocaleString()} (${
+																	plan.type === 'monthly'
+																		? t(
+																				'{{duration}} month(s)',
+																				{
+																					duration:
+																						plan.duration,
+																				},
+																			)
+																		: t('{{count}} visits', {
+																				count: plan.visitCount,
+																			})
+																})`}
 															</Option>
 														))}
 												</Select>
@@ -677,12 +681,16 @@ const AddMemberPage = () => {
 											<Button
 												type='submit'
 												color='primary'
-												icon='PersonAdd'
+												icon={isEditMode ? 'Save' : 'PersonAdd'}
 												isDisable={!formik.isValid || saving}>
 												{saving && <Spinner isSmall inButton />}
 												{saving
-													? t('Registering...')
-													: t('Register Member')}
+													? isEditMode
+														? t('Updating...')
+														: t('Registering...')
+													: isEditMode
+														? t('Update Member')
+														: t('Register Member')}
 											</Button>
 										</div>
 									</div>

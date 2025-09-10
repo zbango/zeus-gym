@@ -23,7 +23,6 @@ import CommonDashboardRecentActivities from './common/CommonDashboardRecentActiv
 import CommonDashboardUserIssue from './common/CommonDashboardUserIssue';
 import CommonDashboardSalesByStore from './common/CommonDashboardSalesByStore';
 import CommonDashboardWaitingAnswer from './common/CommonDashboardWaitingAnswer';
-import CommonMyWallet from '../../_common/CommonMyWallet';
 import CommonDashboardTopSeller from './common/CommonDashboardTopSeller';
 import ThemeContext from '../../../contexts/themeContext';
 
@@ -105,9 +104,6 @@ const DashboardPage = () => {
 						<CommonDashboardWaitingAnswer />
 					</div>
 
-					<div className='col-xxl-4 col-xl-6'>
-						<CommonMyWallet />
-					</div>
 					<div className='col-xxl-8'>
 						<CommonDashboardTopSeller />
 					</div>
