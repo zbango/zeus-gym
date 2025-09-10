@@ -89,7 +89,7 @@ const GymDashboardPage = () => {
 	}
 
 	return (
-		<PageWrapper title={t('Gym Dashboard')}>
+		<PageWrapper title={t('Gym Dashboard')} className='pt-4'>
 			<SubHeader>
 				<SubHeaderLeft>
 					<Icon icon='FitnessCenter' className='me-2' size='2x' />

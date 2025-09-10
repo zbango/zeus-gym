@@ -26,6 +26,14 @@ const presentation: RouteProps[] = [
 	 * Gym Management System (Protected Routes)
 	 */
 	{
+		path: '/',
+		element: (
+			<ProtectedRoute>
+				<GYM.DASHBOARD />
+			</ProtectedRoute>
+		),
+	},
+	{
 		path: '/gym-management/dashboard',
 		element: (
 			<ProtectedRoute>

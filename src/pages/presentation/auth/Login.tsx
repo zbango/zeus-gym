@@ -30,11 +30,8 @@ const LoginHeader: FC<ILoginHeaderExtendedProps> = ({ isNewUser, isGymMode }) =>
 	if (isGymMode) {
 		return (
 			<>
-				<div className='text-center h1 fw-bold mt-5'>
-					<Icon icon='FitnessCenter' className='me-2' />
-					{t('Gym Management System')}
-				</div>
-				<div className='text-center h4 text-muted mb-5'>
+				<div className='text-center h1 fw-bold'>{t('Gym Management System')}</div>
+				<div className='text-center h4 text-muted mb-3'>
 					{t('Sign in to access your gym dashboard')}
 				</div>
 			</>
@@ -134,7 +131,7 @@ const Login: FC<ILoginProps> = ({ isSignUp }) => {
 					<div className='col-xl-4 col-lg-6 col-md-8 shadow-3d-container'>
 						<Card className='shadow-3d-dark' data-tour='login-page'>
 							<CardBody>
-								<div className='text-center my-5'>
+								<div className='text-center my-3'>
 									<Link
 										to='/'
 										className={classNames(
@@ -145,7 +142,7 @@ const Login: FC<ILoginProps> = ({ isSignUp }) => {
 											},
 										)}
 										aria-label='Facit'>
-										<Logo width={200} />
+										<Logo width={200} height={150} />
 									</Link>
 								</div>
 
