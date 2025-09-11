@@ -21,15 +21,18 @@ import Select from '../../../components/bootstrap/forms/Select';
 import Option from '../../../components/bootstrap/Option';
 import Spinner from '../../../components/bootstrap/Spinner';
 import Alert from '../../../components/bootstrap/Alert';
-import { mockMembershipPlans, mockMembers } from '../../../common/data/gymMockData';
-import { IMember } from '../../../types/gym-types';
+import {
+	useGetMemberByIdQuery,
+	useCreateMemberMutation,
+	useUpdateMemberMutation,
+} from '../../../store/api/membersApi';
+import { CreateMemberRequest, UpdateMemberRequest } from '../../../types/member.types';
+import { mockMembershipPlans } from '../../../common/data/gymMockData';
 
 const AddMemberPage = () => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { id } = useParams<{ id?: string }>();
-	const [saving, setSaving] = useState(false);
-	const [loading, setLoading] = useState(false);
 	const [alert, setAlert] = useState<{
 		type: 'success' | 'warning' | 'danger';
 		message: string;
@@ -37,6 +40,14 @@ const AddMemberPage = () => {
 
 	const isEditMode = Boolean(id);
 	const pageTitle = isEditMode ? t('Edit Member') : t('Add New Member');
+
+	// RTK Query hooks
+	const { data: memberData, isLoading: loadingMember } = useGetMemberByIdQuery(id!, {
+		skip: !isEditMode || !id,
+	});
+	const [createMember, { isLoading: isCreating }] = useCreateMemberMutation();
+	const [updateMember, { isLoading: isUpdating }] = useUpdateMemberMutation();
+
 	const [initialValues, setInitialValues] = useState({
 		// Personal Information
 		firstName: '',
@@ -65,37 +76,27 @@ const AddMemberPage = () => {
 
 	// Load member data for editing
 	useEffect(() => {
-		if (isEditMode && id) {
-			setLoading(true);
-			// Simulate API call to get member data
-			const loadMemberData = async () => {
-				await new Promise((resolve) => setTimeout(resolve, 500));
-				const member = mockMembers.find((m) => m.id === id);
-				if (member) {
-					setInitialValues({
-						firstName: member.personalInfo.firstName,
-						lastName: member.personalInfo.lastName,
-						email: member.personalInfo.email,
-						phone: member.personalInfo.phone,
-						address: member.personalInfo.address,
-						emergencyName: member.personalInfo.emergencyContact.name,
-						emergencyPhone: member.personalInfo.emergencyContact.phone,
-						emergencyRelationship: member.personalInfo.emergencyContact.relationship,
-						age: member.healthInfo.age.toString(),
-						height: member.healthInfo.height.toString(),
-						currentWeight: member.healthInfo.currentWeight.toString(),
-						medicalConditions: member.healthInfo.medicalConditions || '',
-						goals: member.healthInfo.goals || '',
-						membershipPlan: member.membershipInfo.plan,
-						membershipType: member.membershipInfo.type,
-						startDate: member.membershipInfo.startDate,
-					});
-				}
-				setLoading(false);
-			};
-			loadMemberData();
+		if (isEditMode && memberData) {
+			setInitialValues({
+				firstName: memberData.personalInfo.firstName,
+				lastName: memberData.personalInfo.lastName,
+				email: memberData.personalInfo.email,
+				phone: memberData.personalInfo.phone,
+				address: memberData.personalInfo.address,
+				emergencyName: memberData.personalInfo.emergencyContact.name,
+				emergencyPhone: memberData.personalInfo.emergencyContact.phone,
+				emergencyRelationship: memberData.personalInfo.emergencyContact.relationship,
+				age: memberData.healthInfo.age.toString(),
+				height: memberData.healthInfo.height.toString(),
+				currentWeight: memberData.healthInfo.currentWeight.toString(),
+				medicalConditions: memberData.healthInfo.medicalConditions || '',
+				goals: memberData.healthInfo.goals || '',
+				membershipPlan: memberData.membershipInfo.plan,
+				membershipType: memberData.membershipInfo.type,
+				startDate: memberData.membershipInfo.startDate,
+			});
 		}
-	}, [id, isEditMode]);
+	}, [isEditMode, memberData]);
 
 	const formik = useFormik({
 		initialValues,
@@ -143,12 +144,7 @@ const AddMemberPage = () => {
 			return errors;
 		},
 		onSubmit: async (values) => {
-			setSaving(true);
-
 			try {
-				// Simulate API call
-				await new Promise((resolve) => setTimeout(resolve, 2000));
-
 				const selectedPlan = mockMembershipPlans.find(
 					(plan) => plan.id === values.membershipPlan,
 				);
@@ -157,58 +153,52 @@ const AddMemberPage = () => {
 					throw new Error('Invalid membership plan selected');
 				}
 
+				const memberData = {
+					personalInfo: {
+						firstName: values.firstName,
+						lastName: values.lastName,
+						email: values.email,
+						phone: values.phone,
+						address: values.address,
+						emergencyContact: {
+							name: values.emergencyName,
+							phone: values.emergencyPhone,
+							relationship: values.emergencyRelationship,
+						},
+					},
+					healthInfo: {
+						age: parseInt(values.age),
+						height: parseInt(values.height),
+						currentWeight: parseInt(values.currentWeight),
+						medicalConditions: values.medicalConditions || 'Ninguna',
+						goals: values.goals || 'Mantenerse en forma',
+					},
+					membershipInfo: {
+						type: selectedPlan.type,
+						plan: selectedPlan.name,
+						startDate: values.startDate,
+						endDate:
+							selectedPlan.type === 'monthly'
+								? dayjs(values.startDate)
+										.add(selectedPlan.duration || 1, 'month')
+										.format('YYYY-MM-DD')
+								: undefined,
+						remainingVisits:
+							selectedPlan.type === 'count-based'
+								? selectedPlan.visitCount
+								: undefined,
+						status: 'active' as const,
+					},
+				};
+
 				if (isEditMode && id) {
 					// Update existing member
-					const updatedMember: IMember = {
-						id: id,
-						personalInfo: {
-							firstName: values.firstName,
-							lastName: values.lastName,
-							email: values.email,
-							phone: values.phone,
-							address: values.address,
-							emergencyContact: {
-								name: values.emergencyName,
-								phone: values.emergencyPhone,
-								relationship: values.emergencyRelationship,
-							},
-						},
-						healthInfo: {
-							age: parseInt(values.age),
-							height: parseInt(values.height),
-							currentWeight: parseInt(values.currentWeight),
-							medicalConditions: values.medicalConditions || 'Ninguna',
-							goals: values.goals || 'Mantenerse en forma',
-						},
-						progressTracking: {
-							measurements: [
-								{
-									date: dayjs().format('YYYY-MM-DD'),
-									weight: parseInt(values.currentWeight),
-									notes: 'Medición actualizada',
-								},
-							],
-						},
-						membershipInfo: {
-							type: selectedPlan.type,
-							plan: selectedPlan.name,
-							startDate: values.startDate,
-							endDate:
-								selectedPlan.type === 'monthly'
-									? dayjs(values.startDate)
-											.add(selectedPlan.duration || 1, 'month')
-											.format('YYYY-MM-DD')
-									: undefined,
-							remainingVisits:
-								selectedPlan.type === 'count-based'
-									? selectedPlan.visitCount
-									: undefined,
-							status: 'active',
-						},
-						registrationDate: dayjs().format('YYYY-MM-DD'),
+					const updateData: UpdateMemberRequest = {
+						id,
+						...memberData,
 					};
 
-					console.log('Member updated:', updatedMember);
+					await updateMember(updateData).unwrap();
 
 					setAlert({
 						type: 'success',
@@ -218,56 +208,8 @@ const AddMemberPage = () => {
 					});
 				} else {
 					// Create new member
-					const newMember: IMember = {
-						id: `member-${Date.now()}`,
-						personalInfo: {
-							firstName: values.firstName,
-							lastName: values.lastName,
-							email: values.email,
-							phone: values.phone,
-							address: values.address,
-							emergencyContact: {
-								name: values.emergencyName,
-								phone: values.emergencyPhone,
-								relationship: values.emergencyRelationship,
-							},
-						},
-						healthInfo: {
-							age: parseInt(values.age),
-							height: parseInt(values.height),
-							currentWeight: parseInt(values.currentWeight),
-							medicalConditions: values.medicalConditions || 'Ninguna',
-							goals: values.goals || 'Mantenerse en forma',
-						},
-						progressTracking: {
-							measurements: [
-								{
-									date: dayjs().format('YYYY-MM-DD'),
-									weight: parseInt(values.currentWeight),
-									notes: 'Medición inicial al registro',
-								},
-							],
-						},
-						membershipInfo: {
-							type: selectedPlan.type,
-							plan: selectedPlan.name,
-							startDate: values.startDate,
-							endDate:
-								selectedPlan.type === 'monthly'
-									? dayjs(values.startDate)
-											.add(selectedPlan.duration || 1, 'month')
-											.format('YYYY-MM-DD')
-									: undefined,
-							remainingVisits:
-								selectedPlan.type === 'count-based'
-									? selectedPlan.visitCount
-									: undefined,
-							status: 'active',
-						},
-						registrationDate: dayjs().format('YYYY-MM-DD'),
-					};
-
-					console.log('New member created:', newMember);
+					const createData: CreateMemberRequest = memberData;
+					await createMember(createData).unwrap();
 
 					setAlert({
 						type: 'success',
@@ -286,13 +228,11 @@ const AddMemberPage = () => {
 					type: 'danger',
 					message: t('An error occurred while saving the member. Please try again.'),
 				});
-			} finally {
-				setSaving(false);
 			}
 		},
 	});
 
-	if (loading) {
+	if (loadingMember) {
 		return (
 			<PageWrapper title={pageTitle}>
 				<div
@@ -682,9 +622,13 @@ const AddMemberPage = () => {
 												type='submit'
 												color='primary'
 												icon={isEditMode ? 'Save' : 'PersonAdd'}
-												isDisable={!formik.isValid || saving}>
-												{saving && <Spinner isSmall inButton />}
-												{saving
+												isDisable={
+													!formik.isValid || isCreating || isUpdating
+												}>
+												{(isCreating || isUpdating) && (
+													<Spinner isSmall inButton />
+												)}
+												{isCreating || isUpdating
 													? isEditMode
 														? t('Updating...')
 														: t('Registering...')
