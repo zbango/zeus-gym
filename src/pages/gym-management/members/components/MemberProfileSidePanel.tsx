@@ -15,6 +15,7 @@ import Card, {
 } from '../../../../components/bootstrap/Card';
 import Avatar from '../../../../components/Avatar';
 import Icon from '../../../../components/icon/Icon';
+import QRCodeGenerator from '../../../../components/common/QRCodeGenerator';
 import { Member } from '../../../../types/member.types';
 
 interface MemberProfileSidePanelProps {
@@ -31,6 +32,7 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 	onEdit,
 }) => {
 	const { t } = useTranslation();
+	const [showQRCode, setShowQRCode] = React.useState(false);
 
 	if (!member) return null;
 
@@ -66,16 +68,24 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 
 	return (
 		<OffCanvas
-			setIsOpen={onClose}
+			setOpen={onClose}
 			isOpen={isOpen}
 			titleId='memberProfileSidePanel'
-			placement='end'
-			size='lg'>
-			<OffCanvasHeader setIsOpen={onClose}>
+			placement='end'>
+			<OffCanvasHeader setOpen={onClose}>
 				<OffCanvasTitle id='memberProfileSidePanel'>{t('Member Profile')}</OffCanvasTitle>
 			</OffCanvasHeader>
 			<OffCanvasBody>
 				<div className='d-flex flex-column gap-4'>
+					{/* QR Code Section */}
+					{showQRCode && (
+						<QRCodeGenerator
+							memberId={member.id}
+							memberName={`${member.personalInfo.firstName} ${member.personalInfo.lastName}`}
+							onClose={() => setShowQRCode(false)}
+						/>
+					)}
+
 					{/* Member Header */}
 					<Card>
 						<CardBody>
@@ -104,17 +114,25 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 										</span>
 									</div>
 								</div>
-								{onEdit && (
+								<div className='d-flex gap-2'>
 									<Button
-										color='primary'
-										icon='Edit'
-										onClick={() => {
-											onEdit(member.id);
-											onClose();
-										}}>
-										{t('Edit')}
+										color='info'
+										icon='QrCode'
+										onClick={() => setShowQRCode(!showQRCode)}>
+										{t('QR Code')}
 									</Button>
-								)}
+									{onEdit && (
+										<Button
+											color='primary'
+											icon='Edit'
+											onClick={() => {
+												onEdit(member.id);
+												onClose();
+											}}>
+											{t('Edit')}
+										</Button>
+									)}
+								</div>
 							</div>
 						</CardBody>
 					</Card>

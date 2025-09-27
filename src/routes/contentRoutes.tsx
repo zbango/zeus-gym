@@ -7,6 +7,7 @@ const GYM = {
 	DASHBOARD: lazy(() => import('../pages/gym-management/GymDashboardPage')),
 	MEMBERS_LIST: lazy(() => import('../pages/gym-management/members/MembersListPage')),
 	ADD_MEMBER: lazy(() => import('../pages/gym-management/members/AddMemberPage')),
+	MEMBER_STATS: lazy(() => import('../pages/gym-management/members/MemberStatsPage')),
 	CHECKIN: lazy(() => import('../pages/gym-management/CheckInPage')),
 	MEMBERSHIP_PLANS: lazy(() => import('../pages/gym-management/memberships/MembershipPlansPage')),
 	PAYMENTS: lazy(() => import('../pages/gym-management/memberships/PaymentsPage')),
@@ -136,6 +137,14 @@ const presentation: RouteProps[] = [
 				<GYM.SETTINGS />
 			</ProtectedRoute>
 		),
+	},
+
+	/**
+	 * Public Member Stats (Non-protected route for QR code access)
+	 */
+	{
+		path: '/member/:memberId/stats',
+		element: <GYM.MEMBER_STATS />,
 	},
 
 	/**

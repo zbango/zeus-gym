@@ -4,6 +4,7 @@ import { ReactNotifications } from 'react-notifications-component';
 import { useFullscreen } from 'react-use';
 import { TourProvider } from '@reactour/tour';
 import { Provider } from 'react-redux';
+import { useLocation } from 'react-router-dom';
 import dayjs from 'dayjs';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -56,8 +57,8 @@ const App = () => {
 	 * Full Screen
 	 */
 	const { fullScreenStatus, setFullScreenStatus } = useContext(ThemeContext);
-	const ref = useRef(null);
-	useFullscreen(ref, fullScreenStatus, {
+	const ref = useRef<HTMLDivElement>(null);
+	useFullscreen(ref as React.RefObject<Element>, fullScreenStatus, {
 		onClose: () => setFullScreenStatus(false),
 	});
 
@@ -80,17 +81,7 @@ const App = () => {
 					styles={styles}
 					showNavigation={false}
 					showBadge={false}>
-					<div
-						ref={ref}
-						className='app'
-						style={{
-							backgroundColor: fullScreenStatus ? 'var(--bs-body-bg)' : undefined,
-							zIndex: fullScreenStatus ? 1 : undefined,
-							overflow: fullScreenStatus ? 'scroll' : undefined,
-						}}>
-						<AsideRoutes />
-						<Wrapper />
-					</div>
+					<AppContent ref={ref} fullScreenStatus={fullScreenStatus} />
 					<Portal id='portal-notification'>
 						<ReactNotifications />
 					</Portal>
@@ -100,5 +91,29 @@ const App = () => {
 		</Provider>
 	);
 };
+
+const AppContent = React.forwardRef<HTMLDivElement, { fullScreenStatus: boolean }>(
+	({ fullScreenStatus }, ref) => {
+		const location = useLocation();
+
+		// Hide sidebar for stats pages
+		const isStatsPage =
+			location.pathname.startsWith('/member/') && location.pathname.includes('/stats');
+
+		return (
+			<div
+				ref={ref}
+				className='app'
+				style={{
+					backgroundColor: fullScreenStatus ? 'var(--bs-body-bg)' : undefined,
+					zIndex: fullScreenStatus ? 1 : undefined,
+					overflow: fullScreenStatus ? 'scroll' : undefined,
+				}}>
+				{!isStatsPage && <AsideRoutes />}
+				<Wrapper />
+			</div>
+		);
+	},
+);
 
 export default App;
