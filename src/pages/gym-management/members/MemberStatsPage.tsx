@@ -282,7 +282,7 @@ const MemberStatsPage = () => {
 												</tr>
 											</thead>
 											<tbody>
-												{member.progressTracking.measurements
+												{[...(member.progressTracking?.measurements || [])]
 													.sort(
 														(a, b) =>
 															new Date(b.date).getTime() -
