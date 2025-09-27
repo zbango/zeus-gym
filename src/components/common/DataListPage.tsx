@@ -38,21 +38,6 @@ export interface DataListPageProps<T = any> {
 	// Breadcrumb
 	breadcrumbs: BreadcrumbItem[];
 
-	// Data
-	data: T[];
-	total: number;
-	isLoading: boolean;
-
-	// Table
-	columns: any[];
-	rowKey: string;
-	onRowClick?: (record: T) => void;
-
-	// Pagination
-	currentPage: number;
-	pageSize: number;
-	onPaginationChange: (page: number, size: number) => void;
-
 	// Search & Filters
 	searchPlaceholder?: string;
 	statusOptions?: Array<{ value: string; label: string }>;
@@ -89,15 +74,6 @@ const DataListPage = <T extends Record<string, any>>({
 	title,
 	className = 'pt-4',
 	breadcrumbs,
-	data,
-	total,
-	isLoading,
-	columns,
-	rowKey,
-	onRowClick,
-	currentPage,
-	pageSize,
-	onPaginationChange,
 	searchPlaceholder = 'Search...',
 	statusOptions = [],
 	advancedFilterFields = [],
@@ -131,25 +107,9 @@ const DataListPage = <T extends Record<string, any>>({
 	// Handle pagination with external handler
 	const handlePaginationChange = (page: number, size: number) => {
 		internalHandlePaginationChange(page, size);
-		onPaginationChange(page, size);
 	};
 
-	// Loading state
-	if (isLoading && data.length === 0) {
-		return (
-			<PageWrapper title={t(title)}>
-				<div
-					className='d-flex justify-content-center align-items-center'
-					style={{ minHeight: '60vh' }}>
-					<div className='text-center'>
-						<Spinner size='3rem' className='mb-3' />
-						<div className='h5'>{t('Loading...')}</div>
-						<div className='text-muted'>{t('Please wait while we fetch data')}</div>
-					</div>
-				</div>
-			</PageWrapper>
-		);
-	}
+	// Note: Loading state is now handled by the child components (DynamicTable)
 
 	return (
 		<PageWrapper title={t(title)} className={className}>

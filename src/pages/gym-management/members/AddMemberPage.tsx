@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
 import SubHeader, { SubHeaderLeft, SubHeaderRight } from '../../../layout/SubHeader/SubHeader';
 import Icon from '../../../components/icon/Icon';
@@ -20,7 +21,6 @@ import Textarea from '../../../components/bootstrap/forms/Textarea';
 import Select from '../../../components/bootstrap/forms/Select';
 import Option from '../../../components/bootstrap/Option';
 import Spinner from '../../../components/bootstrap/Spinner';
-import Alert from '../../../components/bootstrap/Alert';
 import {
 	useGetMemberByIdQuery,
 	useCreateMemberMutation,
@@ -33,13 +33,18 @@ const AddMemberPage = () => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { id } = useParams<{ id?: string }>();
-	const [alert, setAlert] = useState<{
-		type: 'success' | 'warning' | 'danger';
-		message: string;
-	} | null>(null);
 
 	const isEditMode = Boolean(id);
 	const pageTitle = isEditMode ? t('Edit Member') : t('Add New Member');
+
+	// Function to calculate age from birth date
+	const calculateAge = (birthDate: string): string => {
+		if (!birthDate) return '';
+		const today = dayjs();
+		const birth = dayjs(birthDate);
+		const age = today.diff(birth, 'year');
+		return age.toString();
+	};
 
 	// RTK Query hooks
 	const { data: memberData, isLoading: loadingMember } = useGetMemberByIdQuery(id!, {
@@ -55,6 +60,8 @@ const AddMemberPage = () => {
 		email: '',
 		phone: '',
 		address: '',
+		birthDate: '',
+		identification: '',
 
 		// Emergency Contact
 		emergencyName: '',
@@ -83,6 +90,8 @@ const AddMemberPage = () => {
 				email: memberData.personalInfo.email,
 				phone: memberData.personalInfo.phone,
 				address: memberData.personalInfo.address,
+				birthDate: memberData.personalInfo.birthDate || '',
+				identification: memberData.personalInfo.identification || '',
 				emergencyName: memberData.personalInfo.emergencyContact.name,
 				emergencyPhone: memberData.personalInfo.emergencyContact.phone,
 				emergencyRelationship: memberData.personalInfo.emergencyContact.relationship,
@@ -109,23 +118,14 @@ const AddMemberPage = () => {
 			if (!values.lastName) errors.lastName = t('Last name is required');
 			if (!values.email) errors.email = t('Email is required');
 			if (!values.phone) errors.phone = t('Phone is required');
-			if (!values.age) errors.age = t('Age is required');
+			if (!values.identification) errors.identification = t('Identification is required');
 			if (!values.height) errors.height = t('Height is required');
 			if (!values.currentWeight) errors.currentWeight = t('Weight is required');
 			if (!values.membershipPlan) errors.membershipPlan = t('Membership plan is required');
-			if (!values.emergencyName)
-				errors.emergencyName = t('Emergency contact name is required');
-			if (!values.emergencyPhone)
-				errors.emergencyPhone = t('Emergency contact phone is required');
 
 			// Email validation
 			if (values.email && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
 				errors.email = t('Invalid email address');
-			}
-
-			// Age validation
-			if (values.age && (parseInt(values.age) < 16 || parseInt(values.age) > 80)) {
-				errors.age = t('Age must be between 16 and 80');
 			}
 
 			// Height validation
@@ -160,6 +160,8 @@ const AddMemberPage = () => {
 						email: values.email,
 						phone: values.phone,
 						address: values.address,
+						birthDate: values.birthDate,
+						identification: values.identification,
 						emergencyContact: {
 							name: values.emergencyName,
 							phone: values.emergencyPhone,
@@ -167,7 +169,7 @@ const AddMemberPage = () => {
 						},
 					},
 					healthInfo: {
-						age: parseInt(values.age),
+						age: parseInt(values.age) || parseInt(calculateAge(values.birthDate)) || 0,
 						height: parseInt(values.height),
 						currentWeight: parseInt(values.currentWeight),
 						medicalConditions: values.medicalConditions || 'Ninguna',
@@ -200,37 +202,40 @@ const AddMemberPage = () => {
 
 					await updateMember(updateData).unwrap();
 
-					setAlert({
-						type: 'success',
-						message: t('Member {{name}} has been successfully updated!', {
+					toast.success(
+						t('Member {{name}} has been successfully updated!', {
 							name: `${values.firstName} ${values.lastName}`,
 						}),
-					});
+					);
 				} else {
 					// Create new member
 					const createData: CreateMemberRequest = memberData;
 					await createMember(createData).unwrap();
 
-					setAlert({
-						type: 'success',
-						message: t('Member {{name}} has been successfully registered!', {
+					toast.success(
+						t('Member {{name}} has been successfully registered!', {
 							name: `${values.firstName} ${values.lastName}`,
 						}),
-					});
+					);
 				}
 
 				// Redirect after 2 seconds
-				setTimeout(() => {
-					navigate('/gym-management/members/list');
-				}, 2000);
+				navigate('/gym-management/members/list');
 			} catch (error) {
-				setAlert({
-					type: 'danger',
-					message: t('An error occurred while saving the member. Please try again.'),
-				});
+				toast.error(t('An error occurred while saving the member. Please try again.'));
 			}
 		},
 	});
+
+	// Auto-calculate age when birth date changes
+	useEffect(() => {
+		if (formik.values.birthDate) {
+			const calculatedAge = calculateAge(formik.values.birthDate);
+			if (calculatedAge !== formik.values.age) {
+				formik.setFieldValue('age', calculatedAge);
+			}
+		}
+	}, [formik.values.birthDate]);
 
 	if (loadingMember) {
 		return (
@@ -269,16 +274,6 @@ const AddMemberPage = () => {
 				</SubHeaderRight>
 			</SubHeader>
 			<Page container='fluid'>
-				{alert && (
-					<Alert color={alert.type} isLight className='mb-4'>
-						<Icon
-							icon={alert.type === 'success' ? 'CheckCircle' : 'Error'}
-							className='me-2'
-						/>
-						{alert.message}
-					</Alert>
-				)}
-
 				<form onSubmit={formik.handleSubmit}>
 					<div className='row g-4'>
 						{/* Personal Information */}
@@ -358,6 +353,42 @@ const AddMemberPage = () => {
 												/>
 											</FormGroup>
 										</div>
+										<div className='col-md-6'>
+											<FormGroup id='birthDate' label={t('Birth Date')}>
+												<Input
+													type='date'
+													name='birthDate'
+													onChange={formik.handleChange}
+													onBlur={formik.handleBlur}
+													value={formik.values.birthDate}
+													isValid={formik.isValid}
+													isTouched={
+														formik.touched.birthDate &&
+														!!formik.errors.birthDate
+													}
+													invalidFeedback={formik.errors.birthDate}
+												/>
+											</FormGroup>
+										</div>
+										<div className='col-md-6'>
+											<FormGroup
+												id='identification'
+												label={t('Identification')}>
+												<Input
+													name='identification'
+													onChange={formik.handleChange}
+													onBlur={formik.handleBlur}
+													value={formik.values.identification}
+													placeholder={t('ID number or passport')}
+													isValid={formik.isValid}
+													isTouched={
+														formik.touched.identification &&
+														!!formik.errors.identification
+													}
+													invalidFeedback={formik.errors.identification}
+												/>
+											</FormGroup>
+										</div>
 										<div className='col-12'>
 											<FormGroup id='address' label={t('Address')}>
 												<Textarea
@@ -390,16 +421,9 @@ const AddMemberPage = () => {
 												<Input
 													type='number'
 													name='age'
-													onChange={formik.handleChange}
-													onBlur={formik.handleBlur}
 													value={formik.values.age}
-													min={16}
-													max={80}
-													isValid={formik.isValid}
-													isTouched={
-														formik.touched.age && !!formik.errors.age
-													}
-													invalidFeedback={formik.errors.age}
+													readOnly
+													className='bg-light'
 												/>
 											</FormGroup>
 										</div>
@@ -538,7 +562,7 @@ const AddMemberPage = () => {
 										</div>
 										{formik.values.membershipPlan && (
 											<div className='col-12'>
-												<div className='alert alert-info'>
+												<div className='alert alert-warning'>
 													{(() => {
 														const selectedPlan =
 															mockMembershipPlans.find(

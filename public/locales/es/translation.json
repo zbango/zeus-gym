@@ -545,5 +545,18 @@
 	"Medical Conditions (Optional)": "Condiciones Médicas (Opcional)",
 	"Any medical conditions or allergies...": "Cualquier condición médica o alergia...",
 	"e.g., Father, Mother, Spouse": "ej., Padre, Madre, Cónyuge",
-	"Save Changes": "Guardar Cambios"
+	"Save Changes": "Guardar Cambios",
+	"Birth Date": "Fecha de Nacimiento",
+	"Identification": "Identificación",
+	"ID number or passport": "Número de identificación o pasaporte",
+	"Full address...": "Dirección completa...",
+	"More Filters": "Más filtros",
+	"Update Member": "Actualizar Miembro",
+	"Member {{name}} has been successfully updated!": "¡El miembro \"{{name}}\" ha sido actualizado exitosamente!",
+	"Member {{name}} has been successfully registered!": "¡El miembro \"{{name}}\" ha sido registrado exitosamente!",
+	"An error occurred while saving the member. Please try again.": "Ocurrió un error al guardar el miembro. Por favor, inténtalo de nuevo.",
+	"All Status": "Todos los Estados",
+	"Member Profile": "Perfil de Miembro",
+	"End Date": "Fecha de Fin",
+	"Registration Date": "Fecha de Registro"
 }

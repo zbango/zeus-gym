@@ -8,6 +8,8 @@ export interface IMember {
 		email: string;
 		phone: string;
 		address: string;
+		birthDate: string;
+		identification: string;
 		emergencyContact: {
 			name: string;
 			phone: string;

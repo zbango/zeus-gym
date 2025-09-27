@@ -13,6 +13,8 @@ export interface PersonalInfo {
 	phone: string;
 	address: string;
 	emergencyContact: EmergencyContact;
+	birthDate: string;
+	identification: string;
 }
 
 export interface EmergencyContact {

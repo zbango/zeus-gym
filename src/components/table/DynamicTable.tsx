@@ -244,8 +244,7 @@ const DynamicTable = <T extends Record<string, any>>({
 									key={String(record[rowKey])}
 									className={classNames({
 										'table-active': isRowSelected(record),
-									})}
-									{...onRow?.(record, index)}>
+									})}>
 									{selection && (
 										<td>
 											<div className='form-check'>

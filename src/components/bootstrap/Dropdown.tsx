@@ -116,7 +116,15 @@ export const DropdownMenu: FC<IDropdownMenuProps> = ({
 					(direction === 'start' && 'left') ||
 					'bottom'
 				}-${isAlignmentEnd ? 'end' : 'start'}`,
-		middleware: [offset(1), flip(), shift()],
+		middleware: [
+			offset(1),
+			flip({
+				fallbackPlacements: ['top-start', 'top-end', 'bottom-start', 'bottom-end'],
+			}),
+			shift({
+				padding: 8,
+			}),
+		],
 		whileElementsMounted: autoUpdate,
 	});
 
@@ -140,6 +148,7 @@ export const DropdownMenu: FC<IDropdownMenuProps> = ({
 					position: strategy,
 					top: y ?? 0,
 					left: x ?? 0,
+					zIndex: 1050, // Higher than pagination and other elements
 				}}
 				data-placement={placement}
 				className={classNames(

@@ -547,5 +547,18 @@
 	"Medical Conditions (Optional)": "Medical Conditions (Optional)",
 	"Any medical conditions or allergies...": "Any medical conditions or allergies...",
 	"e.g., Father, Mother, Spouse": "e.g., Father, Mother, Spouse",
-	"Save Changes": "Save Changes"
+	"Save Changes": "Save Changes",
+	"Birth Date": "Birth Date",
+	"Identification": "Identification",
+	"ID number or passport": "ID number or passport",
+	"Full address...": "Full address...",
+	"More Filters": "More filters",
+	"Update Member": "Update Member",
+	"Member {{name}} has been successfully updated!": "Member {{name}} has been successfully updated!",
+	"Member {{name}} has been successfully registered!": "Member {{name}} has been successfully registered!",
+	"An error occurred while saving the member. Please try again.": "An error occurred while saving the member. Please try again.",
+	"All Status": "All Status",
+	"Member Profile": "Member Profile",
+	"End Date": "End Date",
+	"Registration Date": "Registration Date"
 }

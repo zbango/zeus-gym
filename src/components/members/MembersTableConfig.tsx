@@ -10,7 +10,10 @@ import Icon from '../icon/Icon';
 import classNames from 'classnames';
 import useDarkMode from '../../hooks/useDarkMode';
 
-export const useMembersTableColumns = (): TableColumn<Member>[] => {
+export const useMembersTableColumns = (
+	onViewProfile?: (member: Member) => void,
+	onEditMember?: (memberId: string) => void,
+): TableColumn<Member>[] => {
 	const { t } = useTranslation();
 	const { darkModeStatus } = useDarkMode();
 
@@ -31,24 +34,6 @@ export const useMembersTableColumns = (): TableColumn<Member>[] => {
 
 	return [
 		{
-			key: 'actions',
-			title: '',
-			dataIndex: 'id',
-			width: 60,
-			render: (_, record) => (
-				<Button
-					isOutline={!darkModeStatus}
-					color='dark'
-					isLight={darkModeStatus}
-					className={classNames({
-						'border-light': !darkModeStatus,
-					})}
-					icon='Visibility'
-					aria-label='View details'
-				/>
-			),
-		},
-		{
 			key: 'member',
 			title: t('Member'),
 			dataIndex: 'personalInfo.firstName',
@@ -61,8 +46,7 @@ export const useMembersTableColumns = (): TableColumn<Member>[] => {
 							{record.personalInfo.firstName} {record.personalInfo.lastName}
 						</div>
 						<div className='small text-muted'>
-							{t('{{age}} years', { age: record.healthInfo.age })} •{' '}
-							{record.healthInfo.height}cm
+							{t('{{age}} years', { age: record.healthInfo.age })}
 						</div>
 					</div>
 				</div>
@@ -135,27 +119,6 @@ export const useMembersTableColumns = (): TableColumn<Member>[] => {
 			),
 		},
 		{
-			key: 'progress',
-			title: t('Progress'),
-			dataIndex: 'progressTracking.measurements',
-			render: (_, record) => {
-				const latestProgress =
-					record.progressTracking.measurements[
-						record.progressTracking.measurements.length - 1
-					];
-				return latestProgress ? (
-					<div>
-						<div className='fw-bold'>{latestProgress.weight}kg</div>
-						<div className='small text-muted'>
-							{dayjs(latestProgress.date).format('DD/MM/YYYY')}
-						</div>
-					</div>
-				) : (
-					<span className='text-muted'>-</span>
-				);
-			},
-		},
-		{
 			key: 'payment',
 			title: t('Payment'),
 			dataIndex: 'id',
@@ -194,39 +157,70 @@ export const useMembersTableColumns = (): TableColumn<Member>[] => {
 						/>
 					</DropdownToggle>
 					<DropdownMenu>
-						<DropdownItem>
+						<DropdownItem
+							onClick={(e: React.MouseEvent) => {
+								e.stopPropagation();
+								onViewProfile?.(record);
+							}}>
 							<div>
 								<Icon icon='Visibility' className='me-2' />
 								{t('View Profile')}
 							</div>
 						</DropdownItem>
-						<DropdownItem>
+						<DropdownItem
+							onClick={(e: React.MouseEvent) => {
+								e.stopPropagation();
+								onEditMember?.(record.id);
+							}}>
 							<div>
 								<Icon icon='Edit' className='me-2' />
 								{t('Edit Member')}
 							</div>
 						</DropdownItem>
-						<DropdownItem>
+						<DropdownItem
+							onClick={(e: React.MouseEvent) => {
+								e.stopPropagation();
+								// Navigate to progress view
+								window.location.href = `/gym-management/members/${record.id}/progress`;
+							}}>
 							<div>
 								<Icon icon='TrendingUp' className='me-2' />
 								{t('View Progress')}
 							</div>
 						</DropdownItem>
 						<DropdownItem isDivider />
-						<DropdownItem>
+						<DropdownItem
+							onClick={(e: React.MouseEvent) => {
+								e.stopPropagation();
+								// Navigate to payment history
+								window.location.href = `/gym-management/members/${record.id}/payments`;
+							}}>
 							<div>
 								<Icon icon='Payment' className='me-2' />
 								{t('Payment History')}
 							</div>
 						</DropdownItem>
-						<DropdownItem>
+						<DropdownItem
+							onClick={(e: React.MouseEvent) => {
+								e.stopPropagation();
+								// Navigate to check-in history
+								window.location.href = `/gym-management/members/${record.id}/checkins`;
+							}}>
 							<div>
 								<Icon icon='LoginTwoTone' className='me-2' />
 								{t('Check-in History')}
 							</div>
 						</DropdownItem>
 						<DropdownItem isDivider />
-						<DropdownItem>
+						<DropdownItem
+							onClick={(e: React.MouseEvent) => {
+								e.stopPropagation();
+								// Handle delete member
+								if (confirm(t('Are you sure you want to delete this member?'))) {
+									console.log('Delete member:', record.id);
+									// TODO: Implement delete functionality
+								}
+							}}>
 							<div className='text-danger'>
 								<Icon icon='Delete' className='me-2' />
 								{t('Delete Member')}

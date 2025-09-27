@@ -44,16 +44,6 @@ export const membersAdvancedFilterFields: FilterField[] = [
 		},
 	},
 	{
-		key: 'registrationDateRange',
-		label: 'Registration Date',
-		icon: 'CalendarToday',
-		type: 'date-range',
-		placeholder: {
-			start: 'Start Date',
-			end: 'End Date',
-		},
-	},
-	{
 		key: 'paymentStatus',
 		label: 'Payment Status',
 		icon: 'Payment',
@@ -62,16 +52,6 @@ export const membersAdvancedFilterFields: FilterField[] = [
 			{ value: 'up-to-date', label: 'Up to date' },
 			{ value: 'pending', label: 'Pending' },
 			{ value: 'overdue', label: 'Overdue' },
-		],
-	},
-	{
-		key: 'hasProgress',
-		label: 'Progress Tracking',
-		icon: 'TrendingUp',
-		type: 'select',
-		options: [
-			{ value: 'with-progress', label: 'With Progress' },
-			{ value: 'without-progress', label: 'Without Progress' },
 		],
 	},
 	{
@@ -84,6 +64,16 @@ export const membersAdvancedFilterFields: FilterField[] = [
 			{ value: 'female', label: 'Female' },
 			{ value: 'other', label: 'Other' },
 		],
+	},
+	{
+		key: 'registrationDateRange',
+		label: 'Registration Date',
+		icon: 'CalendarToday',
+		type: 'date-range',
+		placeholder: {
+			start: 'Start Date',
+			end: 'End Date',
+		},
 	},
 ];
 

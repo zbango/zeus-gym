@@ -6,7 +6,49 @@ import {
 	MemberListResponse,
 	MemberListParams,
 } from '../../types/member.types';
-import { mockMembers } from '../../common/data/gymMockData';
+import { mockMembers as initialMockMembers } from '../../common/data/gymMockData';
+
+// LocalStorage key for persisting members data
+const MEMBERS_STORAGE_KEY = 'zeus_gym_members';
+
+// Function to get members from localStorage or fallback to initial data
+const getStoredMembers = (): Member[] => {
+	try {
+		const stored = localStorage.getItem(MEMBERS_STORAGE_KEY);
+		if (stored) {
+			const parsed = JSON.parse(stored);
+			// Merge with initial members to ensure we have all required fields
+			return parsed.map((member: any) => ({
+				...member,
+				// Ensure all required fields exist
+				createdAt: member.createdAt || new Date().toISOString(),
+				updatedAt: member.updatedAt || new Date().toISOString(),
+				registrationDate:
+					member.registrationDate || member.createdAt || new Date().toISOString(),
+			}));
+		}
+	} catch (error) {
+		console.warn('Failed to parse stored members:', error);
+	}
+	// Convert IMember to Member format
+	return initialMockMembers.map((member) => ({
+		...member,
+		createdAt: (member as any).createdAt || new Date().toISOString(),
+		updatedAt: (member as any).updatedAt || new Date().toISOString(),
+	}));
+};
+
+// Function to save members to localStorage
+const saveMembersToStorage = (members: Member[]) => {
+	try {
+		localStorage.setItem(MEMBERS_STORAGE_KEY, JSON.stringify(members));
+	} catch (error) {
+		console.warn('Failed to save members to localStorage:', error);
+	}
+};
+
+// Initialize with stored data or fallback to initial data
+let mockMembers = getStoredMembers();
 
 // Mock delay function
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -59,11 +101,11 @@ export const membersApi = createApi({
 				// Apply sorting
 				filteredMembers.sort((a, b) => {
 					const aValue = sortBy.includes('.')
-						? sortBy.split('.').reduce((obj, key) => obj[key], a)
-						: a[sortBy as keyof Member];
+						? sortBy.split('.').reduce((obj: any, key) => obj[key], a)
+						: (a as any)[sortBy];
 					const bValue = sortBy.includes('.')
-						? sortBy.split('.').reduce((obj, key) => obj[key], b)
-						: b[sortBy as keyof Member];
+						? sortBy.split('.').reduce((obj: any, key) => obj[key], b)
+						: (b as any)[sortBy];
 
 					if (sortOrder === 'asc') {
 						return aValue > bValue ? 1 : -1;
@@ -124,8 +166,12 @@ export const membersApi = createApi({
 					},
 				};
 
-				// In a real app, this would be sent to the server
-				// For now, we'll just return the created member
+				// Add the new member to our persistent mock data
+				mockMembers.push(member);
+
+				// Save to localStorage
+				saveMembersToStorage(mockMembers);
+
 				return { data: member };
 			},
 			invalidatesTags: ['Member'],
@@ -135,16 +181,22 @@ export const membersApi = createApi({
 		updateMember: builder.mutation<Member, UpdateMemberRequest>({
 			queryFn: async ({ id, ...updateData }) => {
 				await delay(600);
-				const existingMember = mockMembers.find((m) => m.id === id);
-				if (!existingMember) {
+				const memberIndex = mockMembers.findIndex((m) => m.id === id);
+				if (memberIndex === -1) {
 					return { error: { status: 404, data: 'Member not found' } };
 				}
 
 				const updatedMember: Member = {
-					...existingMember,
+					...mockMembers[memberIndex],
 					...updateData,
 					updatedAt: new Date().toISOString(),
 				};
+
+				// Update the member in our persistent mock data
+				mockMembers[memberIndex] = updatedMember;
+
+				// Save to localStorage
+				saveMembersToStorage(mockMembers);
 
 				return { data: updatedMember };
 			},
@@ -155,10 +207,17 @@ export const membersApi = createApi({
 		deleteMember: builder.mutation<void, string>({
 			queryFn: async (id) => {
 				await delay(400);
-				const memberExists = mockMembers.find((m) => m.id === id);
-				if (!memberExists) {
+				const memberIndex = mockMembers.findIndex((m) => m.id === id);
+				if (memberIndex === -1) {
 					return { error: { status: 404, data: 'Member not found' } };
 				}
+
+				// Remove the member from our persistent mock data
+				mockMembers.splice(memberIndex, 1);
+
+				// Save to localStorage
+				saveMembersToStorage(mockMembers);
+
 				return { data: undefined };
 			},
 			invalidatesTags: ['Member'],
@@ -168,19 +227,25 @@ export const membersApi = createApi({
 		updateMemberStatus: builder.mutation<Member, { id: string; status: string }>({
 			queryFn: async ({ id, status }) => {
 				await delay(300);
-				const existingMember = mockMembers.find((m) => m.id === id);
-				if (!existingMember) {
+				const memberIndex = mockMembers.findIndex((m) => m.id === id);
+				if (memberIndex === -1) {
 					return { error: { status: 404, data: 'Member not found' } };
 				}
 
 				const updatedMember: Member = {
-					...existingMember,
+					...mockMembers[memberIndex],
 					membershipInfo: {
-						...existingMember.membershipInfo,
+						...mockMembers[memberIndex].membershipInfo,
 						status: status as any,
 					},
 					updatedAt: new Date().toISOString(),
 				};
+
+				// Update the member in our persistent mock data
+				mockMembers[memberIndex] = updatedMember;
+
+				// Save to localStorage
+				saveMembersToStorage(mockMembers);
 
 				return { data: updatedMember };
 			},
@@ -188,6 +253,38 @@ export const membersApi = createApi({
 		}),
 	}),
 });
+
+// Utility function to clear stored data (for development/testing)
+export const clearStoredMembers = () => {
+	try {
+		localStorage.removeItem(MEMBERS_STORAGE_KEY);
+		// Reset to initial data
+		mockMembers = initialMockMembers.map((member) => ({
+			...member,
+			createdAt: (member as any).createdAt || new Date().toISOString(),
+			updatedAt: (member as any).updatedAt || new Date().toISOString(),
+		}));
+		saveMembersToStorage(mockMembers);
+		console.log('Stored members data cleared and reset to initial data');
+	} catch (error) {
+		console.warn('Failed to clear stored members:', error);
+	}
+};
+
+// Utility function to reset to initial data
+export const resetToInitialData = () => {
+	try {
+		mockMembers = initialMockMembers.map((member) => ({
+			...member,
+			createdAt: (member as any).createdAt || new Date().toISOString(),
+			updatedAt: (member as any).updatedAt || new Date().toISOString(),
+		}));
+		saveMembersToStorage(mockMembers);
+		console.log('Members data reset to initial data');
+	} catch (error) {
+		console.warn('Failed to reset members data:', error);
+	}
+};
 
 export const {
 	useGetMembersQuery,

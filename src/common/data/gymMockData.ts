@@ -40,15 +40,6 @@ export const mockMembershipPlans: IMembershipPlan[] = [
 		isActive: true,
 	},
 	{
-		id: 'plan-4',
-		name: '8 Visitas',
-		type: 'count-based',
-		price: 40,
-		visitCount: 8,
-		description: '8 visitas para usar cuando quieras',
-		isActive: true,
-	},
-	{
 		id: 'plan-5',
 		name: 'Día de Prueba',
 		type: 'count-based',
@@ -69,6 +60,8 @@ export const mockMembers: IMember[] = [
 			email: 'juan.perez@email.com',
 			phone: '+593 99 234 5678',
 			address: 'Av. Amazonas N24-56, Quito',
+			birthDate: '1995-03-15',
+			identification: '1234567890',
 			emergencyContact: {
 				name: 'María Pérez',
 				phone: '+593 99 234 5679',
@@ -133,6 +126,8 @@ export const mockMembers: IMember[] = [
 			email: 'ana.garcia@email.com',
 			phone: '+593 98 345 6789',
 			address: 'Calle García Moreno 12-34, Guayaquil',
+			birthDate: '1998-07-22',
+			identification: '0987654321',
 			emergencyContact: {
 				name: 'Carlos García',
 				phone: '+593 98 345 6790',
@@ -189,6 +184,8 @@ export const mockMembers: IMember[] = [
 			email: 'carlos.lopez@email.com',
 			phone: '+593 97 456 7890',
 			address: 'Av. 6 de Diciembre N25-78, Cuenca',
+			birthDate: '1988-11-10',
+			identification: '1122334455',
 			emergencyContact: {
 				name: 'Laura López',
 				phone: '+593 97 456 7891',

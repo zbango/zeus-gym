@@ -1,0 +1,25 @@
+// Dropdown z-index fixes to prevent overlap with pagination
+.dropdown-menu {
+	z-index: 1050 !important;
+}
+
+// Ensure dropdowns appear above table pagination
+.table-responsive .dropdown-menu {
+	z-index: 1051 !important;
+}
+
+// Fix for dropdowns in table cells
+td .dropdown-menu {
+	z-index: 1052 !important;
+}
+
+// Ensure dropdowns don't get clipped by table container
+.table-responsive {
+	overflow: visible !important;
+}
+
+// Fix for pagination z-index to be lower than dropdowns
+.pagination {
+	z-index: 10;
+	position: relative;
+}
