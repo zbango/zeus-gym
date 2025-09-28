@@ -9,6 +9,7 @@
 
 	display: flex;
 	flex: 1 0 auto;
+	min-height: 0; /* Allow content to shrink */
 
 	.header + & {
 		@include media-breakpoint-down(map.get($aside, mobile-breakpoint)) {

@@ -7,6 +7,8 @@ import Icon from '../../../components/icon/Icon';
 import Button from '../../../components/bootstrap/Button';
 import Page from '../../../layout/Page/Page';
 import PageWrapper from '../../../layout/PageWrapper/PageWrapper';
+import Breadcrumb from '../../../components/bootstrap/Breadcrumb';
+import PageTitle from '../../../components/common/PageTitle';
 import Card, {
 	CardActions,
 	CardBody,
@@ -274,16 +276,34 @@ const PaymentsPage = () => {
 
 	if (loading) {
 		return (
-			<PageWrapper title={t('Payments Management')}>
-				<div
-					className='d-flex justify-content-center align-items-center'
-					style={{ minHeight: '60vh' }}>
-					<div className='text-center'>
-						<Spinner size='3rem' className='mb-3' />
-						<div className='h5'>{t('Loading payments...')}</div>
-						<div className='text-muted'>{t('Please wait')}</div>
+			<PageWrapper title={t('Payment Management')}>
+				<SubHeader>
+					<SubHeaderLeft>
+						<Breadcrumb
+							list={[
+								{ title: t('Dashboard'), to: '/gym-management' },
+								{ title: t('Memberships'), to: '/gym-management/memberships' },
+								{
+									title: t('Payments'),
+									to: '/gym-management/memberships/payments',
+								},
+							]}
+						/>
+					</SubHeaderLeft>
+				</SubHeader>
+				<Page container='fluid'>
+					<div
+						className='d-flex justify-content-center align-items-center'
+						style={{ minHeight: '60vh' }}>
+						<div className='text-center'>
+							<Spinner size='3rem' className='mb-3' />
+							<div className='h5'>{t('Loading payment records...')}</div>
+							<div className='text-muted'>
+								{t('Please wait while we fetch your payment data')}
+							</div>
+						</div>
 					</div>
-				</div>
+				</Page>
 			</PageWrapper>
 		);
 	}
@@ -295,28 +315,41 @@ const PaymentsPage = () => {
 	const totalPendingAmount = pendingPayments.reduce((sum, p) => sum + p.remainingAmount, 0);
 
 	return (
-		<PageWrapper title={t('Payments Management')}>
+		<PageWrapper title={t('Payment Management')}>
 			<SubHeader>
 				<SubHeaderLeft>
-					<Icon icon='Payment' className='me-2' size='2x' />
-					<span className='text-muted'>
-						{t('Manage member payments and track outstanding balances')}
-					</span>
+					<Breadcrumb
+						list={[
+							{ title: t('Dashboard'), to: '/gym-management' },
+							{ title: t('Memberships'), to: '/gym-management/memberships' },
+							{ title: t('Payments'), to: '/gym-management/memberships/payments' },
+						]}
+					/>
 				</SubHeaderLeft>
 				<SubHeaderRight>
 					<Button color='success' icon='Add' onClick={() => setShowAddPaymentModal(true)}>
-						{t('Record Payment')}
+						{t('Record New Payment')}
 					</Button>
 					<Button
 						color={themeStatus}
 						icon='Refresh'
 						isLight
 						onClick={() => window.location.reload()}>
-						{t('Refresh')}
+						{t('Refresh Data')}
 					</Button>
 				</SubHeaderRight>
 			</SubHeader>
 			<Page container='fluid'>
+				{/* Page Title */}
+				<PageTitle
+					title={t('Payment Management')}
+					icon='Payment'
+					iconColor='primary'
+					subtitle={t(
+						'Track member payments, manage outstanding balances, and monitor payment history',
+					)}
+				/>
+
 				{alert && (
 					<Alert color={alert.type} isLight className='mb-4'>
 						<Icon

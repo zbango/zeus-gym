@@ -14,9 +14,8 @@
 	@include padding(map.get($footer, padding-y) map.get($footer, padding-x));
 	@include backdrop-filter-blur(map.get($footer, blur));
 
-	position: sticky;
+	position: relative;
 	z-index: math.round($zindex-sticky - 2);
-	bottom: 0;
 	display: flex;
 	height: map.get($footer, height);
 	align-items: center;

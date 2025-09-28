@@ -126,12 +126,12 @@ export const demoPagesMenu = {
 			},
 		},
 	},
-	gymCheckin: {
-		id: 'gymCheckin',
-		text: 'Check-in',
-		path: 'gym-management/checkin',
-		icon: 'LoginTwoTone',
-	},
+	// gymCheckin: {
+	// 	id: 'gymCheckin',
+	// 	text: 'Check-in',
+	// 	path: 'gym-management/checkin',
+	// 	icon: 'LoginTwoTone',
+	// },
 	gymStore: {
 		id: 'gymStore',
 		text: 'Store',

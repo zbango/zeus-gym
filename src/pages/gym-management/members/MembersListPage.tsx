@@ -7,7 +7,8 @@ import SubHeader, { SubHeaderLeft, SubHeaderRight } from '../../../layout/SubHea
 import PageBreadcrumbs from '../../../components/common/PageBreadcrumbs';
 import PageTitle from '../../../components/common/PageTitle';
 import MembersListActions from './components/MembersListActions';
-import MembersBasicFilters from './components/MembersBasicFilters';
+import MembersSearch from './components/MembersSearch';
+import MembersFilters from './components/MembersFilters';
 import MembersAdvancedFiltersOffCanvas from './components/MembersAdvancedFiltersOffCanvas';
 import MemberProfileSidePanel from './components/MemberProfileSidePanel';
 import ActiveFilterBadges from './components/ActiveFilterBadges';
@@ -18,119 +19,46 @@ import {
 	membersAdvancedFilterFields,
 	membersStatusOptions,
 } from '../../../components/members/MembersFiltersConfig';
-import { useMembers } from '../../../hooks/useMembers';
-import { Member } from '../../../types/member.types';
+import { useMembersList } from './hooks/useMembersList';
 
 const MembersListPage = () => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
-	const [showAdvancedFilters, setShowAdvancedFilters] = React.useState(false);
-	const [showMemberProfile, setShowMemberProfile] = React.useState(false);
-	const [selectedMember, setSelectedMember] = React.useState<Member | null>(null);
 
-	// Custom hook for members management
+	// Use the comprehensive state management hook
 	const {
+		// Data
 		members,
 		total,
 		currentPage,
 		pageSize,
 		isLoading,
+
+		// Filters
+		filters,
+
+		// UI State
+		ui,
+
+		// Actions
+		handlePaginationChange,
+		handleSearchChange,
+		handleStatusChange,
+		handleAdvancedFiltersChange,
+		handleRemoveFilter,
+		handleClearAllAdvancedFilters,
+		handleEditMember,
 		refresh,
-		setPage,
-		setPageSize,
-		setSearch,
-		setStatusFilter,
-		updateParams,
-	} = useMembers();
+	} = useMembersList();
 
-	// Advanced filters state
-	const [advancedFilters, setAdvancedFilters] = React.useState<Record<string, any>>({});
-	const [activeFiltersCount, setActiveFiltersCount] = React.useState(0);
-
-	// Handle table row click
-	const handleRowClick = (record: Member) => {
-		navigate(`/gym-management/members/${record.id}`);
-	};
-
-	// Handle opening member profile
-	const handleViewProfile = (member: Member) => {
-		setSelectedMember(member);
-		setShowMemberProfile(true);
-	};
-
-	// Handle editing member
-	const handleEditMember = (memberId: string) => {
-		navigate(`/gym-management/members/edit/${memberId}`);
-	};
-
-	// Handle pagination
-	const handlePaginationChange = (page: number, size: number) => {
-		setPage(page);
-		setPageSize(size);
-	};
-
-	// Handle search
-	const handleSearchChange = (search: string) => {
-		setSearch(search);
-	};
-
-	// Handle status filter
-	const handleStatusChange = (status: string) => {
-		setStatusFilter(status);
-	};
-
-	// Handle advanced filters change
-	const handleAdvancedFiltersChange = (filters: any) => {
-		setAdvancedFilters(filters);
-		updateParams({
-			...filters,
-			page: 1, // Reset to first page when filters change
-		});
-	};
-
-	// Handle removing individual filter
-	const handleRemoveFilter = (filterKey: string) => {
-		const newFilters = { ...advancedFilters };
-		delete newFilters[filterKey];
-		setAdvancedFilters(newFilters);
-		updateParams({
-			...newFilters,
-			page: 1,
-		});
-	};
-
-	// Handle clearing all advanced filters
-	const handleClearAllAdvancedFilters = () => {
-		setAdvancedFilters({});
-		updateParams({
-			page: 1,
-		});
-	};
-
-	// Update active filters count
-	React.useEffect(() => {
-		let count = 0;
-
-		// Count basic filters
-		// Note: We'd need to track search and status from useMembers hook
-		// For now, we'll focus on advanced filters
-
-		// Count advanced filters
-		Object.values(advancedFilters).forEach((value) => {
-			if (value !== null && value !== undefined && value !== '') {
-				if (typeof value === 'object' && value !== null) {
-					// Handle range objects
-					if (value.min || value.max || value.start || value.end) {
-						count++;
-					}
-				} else {
-					count++;
-				}
-			}
-		});
-
-		setActiveFiltersCount(count);
-	}, [advancedFilters]);
+	// Debug pagination data
+	console.log('Pagination Debug:', {
+		members: members.length,
+		total,
+		currentPage,
+		pageSize,
+		isLoading,
+	});
 
 	return (
 		<PageWrapper title='Members List' className='pt-4'>
@@ -158,21 +86,28 @@ const MembersListPage = () => {
 			</SubHeader>
 
 			<Page container='fluid'>
-				{/* Header Section with Title and Filters */}
+				{/* Header Section with Title and Search */}
 				<Card>
 					<CardHeader borderSize={1}>
 						{/* Left side - Title */}
-						<PageTitle title='Members List' icon='Group' iconColor='info' />
+						<PageTitle
+							title='Members List'
+							icon='Group'
+							iconColor='info'
+							subtitle='Manage your members list here'
+						/>
 
-						{/* Right side - Filters */}
-						<CardActions>
-							<MembersBasicFilters
-								searchPlaceholder='Search members...'
-								statusOptions={membersStatusOptions}
+						{/* Right side - Search */}
+						<CardActions className='d-flex flex-wrap align-items-center gap-3'>
+							<MembersSearch
+								placeholder='Search members...'
 								onSearchChange={handleSearchChange}
+							/>
+							<MembersFilters
+								statusOptions={membersStatusOptions}
 								onStatusChange={handleStatusChange}
-								onAdvancedFiltersClick={() => setShowAdvancedFilters(true)}
-								activeFiltersCount={activeFiltersCount}
+								onAdvancedFiltersClick={ui.handleOpenAdvancedFilters}
+								activeFiltersCount={filters.activeFiltersCount}
 							/>
 						</CardActions>
 					</CardHeader>
@@ -180,7 +115,7 @@ const MembersListPage = () => {
 
 				{/* Active Filter Badges */}
 				<ActiveFilterBadges
-					activeFilters={advancedFilters}
+					activeFilters={filters.filters}
 					onRemoveFilter={handleRemoveFilter}
 					onClearAll={handleClearAllAdvancedFilters}
 				/>
@@ -190,7 +125,7 @@ const MembersListPage = () => {
 					<CardBody className='p-0'>
 						<DynamicTable
 							data={members}
-							columns={useMembersTableColumns(handleViewProfile, handleEditMember)}
+							columns={useMembersTableColumns(ui.handleViewProfile, handleEditMember)}
 							loading={isLoading}
 							rowKey='id'
 							pagination={{
@@ -205,18 +140,18 @@ const MembersListPage = () => {
 
 				{/* Advanced Filters OffCanvas */}
 				<MembersAdvancedFiltersOffCanvas
-					isOpen={showAdvancedFilters}
-					onClose={() => setShowAdvancedFilters(false)}
+					isOpen={ui.showAdvancedFilters}
+					onClose={ui.handleCloseAdvancedFilters}
 					advancedFilterFields={membersAdvancedFilterFields}
 					onAdvancedFiltersChange={handleAdvancedFiltersChange}
-					initialFilters={advancedFilters}
+					initialFilters={filters.filters}
 				/>
 
 				{/* Member Profile Side Panel */}
 				<MemberProfileSidePanel
-					isOpen={showMemberProfile}
-					onClose={() => setShowMemberProfile(false)}
-					member={selectedMember}
+					isOpen={ui.showMemberProfile}
+					onClose={ui.handleCloseProfile}
+					member={ui.selectedMember}
 					onEdit={handleEditMember}
 				/>
 			</Page>

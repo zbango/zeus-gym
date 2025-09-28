@@ -18,8 +18,14 @@ export interface IMember {
 	};
 	healthInfo: {
 		age: number;
+		gender: string;
 		height: number; // cm
 		currentWeight: number; // kg
+		chest?: number; // cm
+		waist?: number; // cm
+		hips?: number; // cm
+		arms?: number; // cm
+		thighs?: number; // cm
 		medicalConditions?: string;
 		goals: string;
 	};

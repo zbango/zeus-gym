@@ -1,36 +1,27 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import Input from '../../../../components/bootstrap/forms/Input';
 import Select from '../../../../components/bootstrap/forms/Select';
 import Option from '../../../../components/bootstrap/Option';
 import Button from '../../../../components/bootstrap/Button';
 import Badge from '../../../../components/bootstrap/Badge';
 
-interface MembersBasicFiltersProps {
-	searchPlaceholder?: string;
+interface MembersFiltersProps {
 	statusOptions?: Array<{ value: string; label: string }>;
-	onSearchChange?: (search: string) => void;
 	onStatusChange?: (status: string) => void;
 	onAdvancedFiltersClick?: () => void;
 	activeFiltersCount?: number;
+	className?: string;
 }
 
-const MembersBasicFilters: React.FC<MembersBasicFiltersProps> = ({
-	searchPlaceholder = 'Search members...',
+const MembersFilters: React.FC<MembersFiltersProps> = ({
 	statusOptions = [],
-	onSearchChange,
 	onStatusChange,
 	onAdvancedFiltersClick,
 	activeFiltersCount = 0,
+	className = '',
 }) => {
 	const { t } = useTranslation();
-	const [searchInput, setSearchInput] = React.useState('');
 	const [statusFilter, setStatusFilter] = React.useState('');
-
-	const handleSearch = (value: string) => {
-		setSearchInput(value);
-		onSearchChange?.(value);
-	};
 
 	const handleStatus = (status: string) => {
 		setStatusFilter(status);
@@ -38,16 +29,7 @@ const MembersBasicFilters: React.FC<MembersBasicFiltersProps> = ({
 	};
 
 	return (
-		<div className='d-flex align-items-center gap-3 flex-wrap'>
-			{/* Search Input */}
-			<Input
-				type='search'
-				placeholder={t(searchPlaceholder)}
-				value={searchInput}
-				onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearch(e.target.value)}
-				style={{ width: '250px' }}
-			/>
-
+		<div className={`d-flex align-items-center gap-3 flex-wrap ${className}`}>
 			{/* Status Filter */}
 			{statusOptions.length > 0 && (
 				<Select
@@ -56,7 +38,7 @@ const MembersBasicFilters: React.FC<MembersBasicFiltersProps> = ({
 						handleStatus(e.target.value)
 					}
 					ariaLabel={t('Filter by status')}
-					style={{ width: '150px' }}>
+					style={{ width: '175px' }}>
 					<Option value=''>{t('All Status')}</Option>
 					{statusOptions.map((option) => (
 						<Option key={option.value} value={option.value}>
@@ -79,4 +61,4 @@ const MembersBasicFilters: React.FC<MembersBasicFiltersProps> = ({
 	);
 };
 
-export default MembersBasicFilters;
+export default MembersFilters;

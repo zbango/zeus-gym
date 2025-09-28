@@ -7,6 +7,8 @@ import Icon from '../../../components/icon/Icon';
 import Button from '../../../components/bootstrap/Button';
 import Page from '../../../layout/Page/Page';
 import PageWrapper from '../../../layout/PageWrapper/PageWrapper';
+import Breadcrumb from '../../../components/bootstrap/Breadcrumb';
+import PageTitle from '../../../components/common/PageTitle';
 import Card, {
 	CardBody,
 	CardHeader,
@@ -329,15 +331,33 @@ const RenewalsPage = () => {
 	if (loading) {
 		return (
 			<PageWrapper title={t('Membership Renewals')}>
-				<div
-					className='d-flex justify-content-center align-items-center'
-					style={{ minHeight: '60vh' }}>
-					<div className='text-center'>
-						<Spinner size='3rem' className='mb-3' />
-						<div className='h5'>{t('Loading renewals...')}</div>
-						<div className='text-muted'>{t('Please wait')}</div>
+				<SubHeader>
+					<SubHeaderLeft>
+						<Breadcrumb
+							list={[
+								{ title: t('Dashboard'), to: '/gym-management' },
+								{ title: t('Memberships'), to: '/gym-management/memberships' },
+								{
+									title: t('Renewals'),
+									to: '/gym-management/memberships/renewals',
+								},
+							]}
+						/>
+					</SubHeaderLeft>
+				</SubHeader>
+				<Page container='fluid'>
+					<div
+						className='d-flex justify-content-center align-items-center'
+						style={{ minHeight: '60vh' }}>
+						<div className='text-center'>
+							<Spinner size='3rem' className='mb-3' />
+							<div className='h5'>{t('Loading renewal records...')}</div>
+							<div className='text-muted'>
+								{t('Please wait while we fetch your renewal data')}
+							</div>
+						</div>
 					</div>
-				</div>
+				</Page>
 			</PageWrapper>
 		);
 	}
@@ -352,25 +372,38 @@ const RenewalsPage = () => {
 		<PageWrapper title={t('Membership Renewals')}>
 			<SubHeader>
 				<SubHeaderLeft>
-					<Icon icon='Autorenew' className='me-2' size='2x' />
-					<span className='text-muted'>
-						{t('Manage membership renewals and track expiring memberships')}
-					</span>
+					<Breadcrumb
+						list={[
+							{ title: t('Dashboard'), to: '/gym-management' },
+							{ title: t('Memberships'), to: '/gym-management/memberships' },
+							{ title: t('Renewals'), to: '/gym-management/memberships/renewals' },
+						]}
+					/>
 				</SubHeaderLeft>
 				<SubHeaderRight>
 					<Button color='success' icon='Add' onClick={handleAddRenewal}>
-						{t('Process Renewal')}
+						{t('Process New Renewal')}
 					</Button>
 					<Button
 						color={themeStatus}
 						icon='Refresh'
 						isLight
 						onClick={() => window.location.reload()}>
-						{t('Refresh')}
+						{t('Refresh Data')}
 					</Button>
 				</SubHeaderRight>
 			</SubHeader>
 			<Page container='fluid'>
+				{/* Page Title */}
+				<PageTitle
+					title={t('Membership Renewals')}
+					icon='Autorenew'
+					iconColor='primary'
+					subtitle={t(
+						'Process membership renewals, track expiring memberships, and manage member retention',
+					)}
+				/>
+
 				{alert && (
 					<Alert color={alert.type} isLight className='mb-4'>
 						<Icon

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { CardLabel, CardTitle } from '../bootstrap/Card';
+import { CardLabel, CardSubTitle, CardTitle } from '../bootstrap/Card';
 
 interface PageTitleProps {
 	title: string;
@@ -15,6 +15,7 @@ interface PageTitleProps {
 		| 'light'
 		| 'dark';
 	className?: string;
+	subtitle?: string;
 }
 
 const PageTitle: React.FC<PageTitleProps> = ({
@@ -22,6 +23,7 @@ const PageTitle: React.FC<PageTitleProps> = ({
 	icon = 'Group',
 	iconColor = 'info',
 	className,
+	subtitle,
 }) => {
 	const { t } = useTranslation();
 
@@ -30,6 +32,11 @@ const PageTitle: React.FC<PageTitleProps> = ({
 			<CardTitle tag='div' className='h5'>
 				{t(title)}
 			</CardTitle>
+			{subtitle && (
+				<CardSubTitle tag='div' className='h6'>
+					{t(subtitle)}
+				</CardSubTitle>
+			)}
 		</CardLabel>
 	);
 };

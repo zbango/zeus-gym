@@ -115,7 +115,7 @@ const ActiveFilterBadges: React.FC<ActiveFilterBadgesProps> = ({
 	return (
 		<div className='d-flex flex-wrap align-items-center gap-2 mb-3'>
 			<span className='text-muted small me-2'>
-				<i className='fa fa-filter me-1'></i>
+				<i className='fa fa-filter me-1' />
 				{t('Active Filters')}:
 			</span>
 

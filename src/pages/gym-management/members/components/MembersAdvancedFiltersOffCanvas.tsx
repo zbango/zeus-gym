@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import OffCanvas, {
 	OffCanvasBody,
@@ -10,7 +10,6 @@ import Input from '../../../../components/bootstrap/forms/Input';
 import Select from '../../../../components/bootstrap/forms/Select';
 import Option from '../../../../components/bootstrap/Option';
 import { FilterField } from '../../../../components/common/AdvancedFilters';
-import { useDataList } from '../../../../hooks/useDataList';
 
 interface MembersAdvancedFiltersOffCanvasProps {
 	isOpen: boolean;
@@ -29,11 +28,77 @@ const MembersAdvancedFiltersOffCanvas: React.FC<MembersAdvancedFiltersOffCanvasP
 }) => {
 	const { t } = useTranslation();
 
-	const { advancedFilters, activeFiltersCount, clearAllFilters, handleAdvancedFilterChange } =
-		useDataList({
-			initialAdvancedFilters: initialFilters,
-			onAdvancedFiltersChange,
-		});
+	// Local state for advanced filters
+	const [advancedFilters, setAdvancedFilters] = useState<Record<string, any>>(initialFilters);
+	const isUserInteractingRef = useRef(false);
+	const lastInitialFiltersRef = useRef<string>('');
+
+	// Reset user interaction flag when component opens
+	useEffect(() => {
+		if (isOpen) {
+			isUserInteractingRef.current = false;
+		}
+	}, [isOpen]);
+
+	// Sync with parent when initialFilters change (e.g., when cleared from ActiveFilterBadges)
+	// But only if the user is not actively interacting with the form
+	useEffect(() => {
+		const currentInitialFiltersString = JSON.stringify(initialFilters);
+
+		// Only sync if the initialFilters actually changed from the parent
+		if (
+			lastInitialFiltersRef.current !== currentInitialFiltersString &&
+			!isUserInteractingRef.current
+		) {
+			console.log(
+				'🔄 MembersAdvancedFiltersOffCanvas: Syncing with parent filters:',
+				initialFilters,
+			);
+			setAdvancedFilters(initialFilters);
+			lastInitialFiltersRef.current = currentInitialFiltersString;
+		}
+	}, [initialFilters]);
+
+	// Calculate active filters count
+	const activeFiltersCount = Object.values(advancedFilters).reduce((count, value) => {
+		if (value !== null && value !== undefined && value !== '') {
+			if (typeof value === 'object' && value !== null) {
+				// Handle range objects
+				if (value.min || value.max || value.start || value.end) {
+					return count + 1;
+				}
+			} else {
+				return count + 1;
+			}
+		}
+		return count;
+	}, 0);
+
+	// Handle individual filter changes
+	const handleAdvancedFilterChange = (filterKey: string, value: any) => {
+		// Set user interacting flag
+		isUserInteractingRef.current = true;
+
+		const newFilters = {
+			...advancedFilters,
+			[filterKey]: value,
+		};
+		setAdvancedFilters(newFilters);
+		onAdvancedFiltersChange?.(newFilters);
+
+		// Reset user interaction flag after a short delay
+		setTimeout(() => {
+			isUserInteractingRef.current = false;
+		}, 100);
+	};
+
+	// Clear all filters
+	const clearAllFilters = () => {
+		console.log('🧹 MembersAdvancedFiltersOffCanvas: Clearing all filters');
+		isUserInteractingRef.current = false;
+		setAdvancedFilters({});
+		onAdvancedFiltersChange?.({});
+	};
 
 	const handleApply = () => {
 		// Apply filters logic would go here
@@ -46,8 +111,7 @@ const MembersAdvancedFiltersOffCanvas: React.FC<MembersAdvancedFiltersOffCanvasP
 			setOpen={onClose}
 			isOpen={isOpen}
 			titleId='advancedFiltersOffCanvas'
-			placement='end'
-			size='lg'>
+			placement='end'>
 			<OffCanvasHeader setOpen={onClose}>
 				<OffCanvasTitle id='advancedFiltersOffCanvas'>
 					{t('Advanced Filters')}
@@ -64,7 +128,7 @@ const MembersAdvancedFiltersOffCanvas: React.FC<MembersAdvancedFiltersOffCanvasP
 								return (
 									<div className='col-12 col-md-6' key={key}>
 										<label className='form-label fw-bold text-muted small'>
-											<i className={`fa fa-${icon} me-1`}></i>
+											<i className={`fa fa-${icon} me-1`} />
 											{t(label)}
 										</label>
 										<Select
@@ -87,7 +151,7 @@ const MembersAdvancedFiltersOffCanvas: React.FC<MembersAdvancedFiltersOffCanvasP
 								return (
 									<div className='col-12 col-md-6' key={key}>
 										<label className='form-label fw-bold text-muted small'>
-											<i className={`fa fa-${icon} me-1`}></i>
+											<i className={`fa fa-${icon} me-1`} />
 											{t(label)} {unit && `(${unit})`}
 										</label>
 										<div className='d-flex gap-2'>
@@ -127,7 +191,7 @@ const MembersAdvancedFiltersOffCanvas: React.FC<MembersAdvancedFiltersOffCanvasP
 								return (
 									<div className='col-12 col-md-6' key={key}>
 										<label className='form-label fw-bold text-muted small'>
-											<i className={`fa fa-${icon} me-1`}></i>
+											<i className={`fa fa-${icon} me-1`} />
 											{t(label)}
 										</label>
 										<div className='d-flex gap-2'>
@@ -165,7 +229,7 @@ const MembersAdvancedFiltersOffCanvas: React.FC<MembersAdvancedFiltersOffCanvasP
 								return (
 									<div className='col-12 col-md-6' key={key}>
 										<label className='form-label fw-bold text-muted small'>
-											<i className={`fa fa-${icon} me-1`}></i>
+											<i className={`fa fa-${icon} me-1`} />
 											{t(label)}
 										</label>
 										<Input
@@ -190,7 +254,7 @@ const MembersAdvancedFiltersOffCanvas: React.FC<MembersAdvancedFiltersOffCanvasP
 				{activeFiltersCount > 0 && (
 					<div className='mt-4 pt-3 border-top'>
 						<div className='d-flex align-items-center gap-2 text-muted'>
-							<i className='fa fa-filter'></i>
+							<i className='fa fa-filter' />
 							<span className='small'>
 								{t('{{count}} active filters', {
 									count: activeFiltersCount,
@@ -205,8 +269,8 @@ const MembersAdvancedFiltersOffCanvas: React.FC<MembersAdvancedFiltersOffCanvasP
 					<Button
 						color='secondary'
 						onClick={clearAllFilters}
-						disabled={activeFiltersCount === 0}>
-						<i className='fa fa-times me-1'></i>
+						isDisable={activeFiltersCount === 0}>
+						<i className='fa fa-times me-1' />
 						{t('Clear All')}
 					</Button>
 					<div className='d-flex gap-2'>
@@ -214,7 +278,7 @@ const MembersAdvancedFiltersOffCanvas: React.FC<MembersAdvancedFiltersOffCanvasP
 							{t('Cancel')}
 						</Button>
 						<Button color='primary' onClick={handleApply}>
-							<i className='fa fa-search me-1'></i>
+							<i className='fa fa-search me-1' />
 							{t('Apply Filters')}
 						</Button>
 					</div>

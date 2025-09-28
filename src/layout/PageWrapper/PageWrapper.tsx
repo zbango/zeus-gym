@@ -33,16 +33,8 @@ const PageWrapper = forwardRef<HTMLDivElement, IPageWrapperProps>(
 
 		const navigate = useNavigate();
 		useEffect(() => {
-			console.log('📄 PageWrapper: Auth check', {
-				isProtected,
-				user,
-				isGymAuthenticated,
-				gymLoading,
-			});
-
 			// Only redirect if protected, loading is complete, and NO authentication (template OR gym)
 			if (isProtected && !gymLoading && user === '' && !isGymAuthenticated) {
-				console.log('📄 PageWrapper: Redirecting to login - no auth found');
 				navigate(`../auth-pages/login`);
 			}
 			return () => {};

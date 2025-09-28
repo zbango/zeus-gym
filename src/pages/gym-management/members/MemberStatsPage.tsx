@@ -363,37 +363,6 @@ const MemberStatsPage = () => {
 							</CardBody>
 						</Card>
 					</div>
-
-					{/* Emergency Contact */}
-					<div className='col-lg-6'>
-						<Card>
-							<CardHeader>
-								<CardLabel icon='Emergency' iconColor='danger'>
-									<CardTitle>{t('Emergency Contact')}</CardTitle>
-								</CardLabel>
-							</CardHeader>
-							<CardBody>
-								<div className='row g-3'>
-									<div className='col-12'>
-										<small className='text-muted'>{t('Name')}</small>
-										<div className='fw-bold'>
-											{member.personalInfo.emergencyContact.name}
-										</div>
-									</div>
-									<div className='col-12'>
-										<small className='text-muted'>{t('Phone')}</small>
-										<div>{member.personalInfo.emergencyContact.phone}</div>
-									</div>
-									<div className='col-12'>
-										<small className='text-muted'>{t('Relationship')}</small>
-										<div>
-											{member.personalInfo.emergencyContact.relationship}
-										</div>
-									</div>
-								</div>
-							</CardBody>
-						</Card>
-					</div>
 				</div>
 
 				{/* Footer */}

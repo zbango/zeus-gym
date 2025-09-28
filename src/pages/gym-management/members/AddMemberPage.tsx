@@ -28,6 +28,7 @@ import {
 } from '../../../store/api/membersApi';
 import { CreateMemberRequest, UpdateMemberRequest } from '../../../types/member.types';
 import { mockMembershipPlans } from '../../../common/data/gymMockData';
+import MemberSuccessDialog from './components/MemberSuccessDialog';
 
 const AddMemberPage = () => {
 	const { t } = useTranslation();
@@ -46,12 +47,109 @@ const AddMemberPage = () => {
 		return age.toString();
 	};
 
+	// Function to calculate BMI
+	const calculateBMI = (weight: number, height: number): number => {
+		if (!weight || !height) return 0;
+		const heightInMeters = height / 100;
+		return Number((weight / (heightInMeters * heightInMeters)).toFixed(1));
+	};
+
+	// Function to get BMI category and feedback
+	const getBMICategory = (
+		bmi: number,
+	): {
+		category: string;
+		color: string;
+		feedback: string;
+	} => {
+		if (bmi < 18.5) {
+			return {
+				category: t('Underweight'),
+				color: 'info',
+				feedback: t('Consider consulting a nutritionist for healthy weight gain.'),
+			};
+		} else if (bmi >= 18.5 && bmi < 25) {
+			return {
+				category: t('Normal'),
+				color: 'success',
+				feedback: t('Healthy weight range. Maintain current lifestyle.'),
+			};
+		} else if (bmi >= 25 && bmi < 30) {
+			return {
+				category: t('Overweight'),
+				color: 'warning',
+				feedback: t('Consider a balanced diet and regular exercise program.'),
+			};
+		} else {
+			return {
+				category: t('Obese'),
+				color: 'danger',
+				feedback: t('Medical consultation recommended. Focus on gradual weight loss.'),
+			};
+		}
+	};
+
 	// RTK Query hooks
 	const { data: memberData, isLoading: loadingMember } = useGetMemberByIdQuery(id!, {
 		skip: !isEditMode || !id,
 	});
 	const [createMember, { isLoading: isCreating }] = useCreateMemberMutation();
 	const [updateMember, { isLoading: isUpdating }] = useUpdateMemberMutation();
+
+	// BMI calculation state
+	const [bmi, setBmi] = useState<number>(0);
+	const [bmiCategory, setBmiCategory] = useState<{
+		category: string;
+		color: string;
+		feedback: string;
+	} | null>(null);
+
+	// Success dialog state
+	const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+	const [createdMember, setCreatedMember] = useState<any>(null);
+
+	// Reset form function
+	const resetForm = () => {
+		setInitialValues({
+			// Personal Information
+			firstName: '',
+			lastName: '',
+			email: '',
+			phone: '',
+			address: '',
+			birthDate: '',
+			identification: '',
+
+			// Health Information
+			age: '',
+			gender: '',
+			height: '',
+			currentWeight: '',
+			chest: '',
+			waist: '',
+			hips: '',
+			arms: '',
+			thighs: '',
+			medicalConditions: '',
+
+			// Membership Information
+			membershipPlan: '',
+			membershipType: 'monthly' as 'monthly' | 'count-based',
+			startDate: dayjs().format('YYYY-MM-DD'),
+			paymentAmount: '',
+		});
+		setBmi(0);
+		setBmiCategory(null);
+	};
+
+	// Handle keep creating
+	const handleKeepCreating = () => {
+		setShowSuccessDialog(false);
+		setCreatedMember(null);
+		resetForm();
+		// Reset formik to initial values
+		formik.resetForm();
+	};
 
 	const [initialValues, setInitialValues] = useState({
 		// Personal Information
@@ -63,22 +161,23 @@ const AddMemberPage = () => {
 		birthDate: '',
 		identification: '',
 
-		// Emergency Contact
-		emergencyName: '',
-		emergencyPhone: '',
-		emergencyRelationship: '',
-
 		// Health Information
 		age: '',
+		gender: '',
 		height: '',
 		currentWeight: '',
+		chest: '',
+		waist: '',
+		hips: '',
+		arms: '',
+		thighs: '',
 		medicalConditions: '',
-		goals: '',
 
 		// Membership Information
 		membershipPlan: '',
 		membershipType: 'monthly' as 'monthly' | 'count-based',
 		startDate: dayjs().format('YYYY-MM-DD'),
+		paymentAmount: '',
 	});
 
 	// Load member data for editing
@@ -92,17 +191,20 @@ const AddMemberPage = () => {
 				address: memberData.personalInfo.address,
 				birthDate: memberData.personalInfo.birthDate || '',
 				identification: memberData.personalInfo.identification || '',
-				emergencyName: memberData.personalInfo.emergencyContact.name,
-				emergencyPhone: memberData.personalInfo.emergencyContact.phone,
-				emergencyRelationship: memberData.personalInfo.emergencyContact.relationship,
 				age: memberData.healthInfo.age.toString(),
+				gender: memberData.healthInfo.gender || '',
 				height: memberData.healthInfo.height.toString(),
 				currentWeight: memberData.healthInfo.currentWeight.toString(),
+				chest: memberData.healthInfo.chest?.toString() || '',
+				waist: memberData.healthInfo.waist?.toString() || '',
+				hips: memberData.healthInfo.hips?.toString() || '',
+				arms: memberData.healthInfo.arms?.toString() || '',
+				thighs: memberData.healthInfo.thighs?.toString() || '',
 				medicalConditions: memberData.healthInfo.medicalConditions || '',
-				goals: memberData.healthInfo.goals || '',
 				membershipPlan: memberData.membershipInfo.plan,
 				membershipType: memberData.membershipInfo.type,
 				startDate: memberData.membershipInfo.startDate,
+				paymentAmount: '',
 			});
 		}
 	}, [isEditMode, memberData]);
@@ -119,9 +221,27 @@ const AddMemberPage = () => {
 			if (!values.email) errors.email = t('Email is required');
 			if (!values.phone) errors.phone = t('Phone is required');
 			if (!values.identification) errors.identification = t('Identification is required');
+			if (!values.gender) errors.gender = t('Gender is required');
 			if (!values.height) errors.height = t('Height is required');
 			if (!values.currentWeight) errors.currentWeight = t('Weight is required');
-			if (!values.membershipPlan) errors.membershipPlan = t('Membership plan is required');
+			// Membership plan is only required for new members
+			if (!isEditMode && !values.membershipPlan)
+				errors.membershipPlan = t('Membership plan is required');
+
+			// Payment amount validation (only for new members)
+			if (
+				!isEditMode &&
+				(!values.paymentAmount || values.paymentAmount.toString().trim() === '')
+			) {
+				errors.paymentAmount = t('Payment amount is required');
+			}
+			if (
+				values.paymentAmount &&
+				values.paymentAmount.toString().trim() !== '' &&
+				parseFloat(values.paymentAmount.toString()) <= 0
+			) {
+				errors.paymentAmount = t('Payment amount must be greater than 0');
+			}
 
 			// Email validation
 			if (values.email && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
@@ -140,42 +260,38 @@ const AddMemberPage = () => {
 			) {
 				errors.currentWeight = t('Weight must be between 40kg and 200kg');
 			}
+			console.log('=== VALIDATION DEBUG ===');
+			console.log('Validation errors:', errors);
+			console.log('Form values:', values);
+			console.log('isEditMode:', isEditMode);
+			console.log('Object.keys(errors).length:', Object.keys(errors).length);
+			console.log('========================');
+
+			// Temporarily return empty errors to test submission
+			if (Object.keys(errors).length > 0) {
+				console.log('BLOCKING SUBMISSION DUE TO ERRORS:', errors);
+				// TEMPORARY: Return empty errors to test submission
+				// return {};
+			}
 
 			return errors;
 		},
 		onSubmit: async (values) => {
 			try {
-				const selectedPlan = mockMembershipPlans.find(
-					(plan) => plan.id === values.membershipPlan,
-				);
+				console.log(values);
 
-				if (!selectedPlan) {
-					throw new Error('Invalid membership plan selected');
-				}
+				// For new members, validate and get membership plan
+				let membershipInfo: any = undefined;
+				if (!isEditMode) {
+					const selectedPlan = mockMembershipPlans.find(
+						(plan) => plan.id === values.membershipPlan,
+					);
 
-				const memberData = {
-					personalInfo: {
-						firstName: values.firstName,
-						lastName: values.lastName,
-						email: values.email,
-						phone: values.phone,
-						address: values.address,
-						birthDate: values.birthDate,
-						identification: values.identification,
-						emergencyContact: {
-							name: values.emergencyName,
-							phone: values.emergencyPhone,
-							relationship: values.emergencyRelationship,
-						},
-					},
-					healthInfo: {
-						age: parseInt(values.age) || parseInt(calculateAge(values.birthDate)) || 0,
-						height: parseInt(values.height),
-						currentWeight: parseInt(values.currentWeight),
-						medicalConditions: values.medicalConditions || 'Ninguna',
-						goals: values.goals || 'Mantenerse en forma',
-					},
-					membershipInfo: {
+					if (!selectedPlan) {
+						throw new Error('Invalid membership plan selected');
+					}
+
+					membershipInfo = {
 						type: selectedPlan.type,
 						plan: selectedPlan.name,
 						startDate: values.startDate,
@@ -190,8 +306,37 @@ const AddMemberPage = () => {
 								? selectedPlan.visitCount
 								: undefined,
 						status: 'active' as const,
+					};
+				}
+
+				const memberData: any = {
+					personalInfo: {
+						firstName: values.firstName,
+						lastName: values.lastName,
+						email: values.email,
+						phone: values.phone,
+						address: values.address,
+						birthDate: values.birthDate,
+						identification: values.identification,
+					},
+					healthInfo: {
+						age: parseInt(values.age) || parseInt(calculateAge(values.birthDate)) || 0,
+						gender: values.gender,
+						height: parseInt(values.height),
+						currentWeight: parseInt(values.currentWeight),
+						chest: values.chest ? parseInt(values.chest) : undefined,
+						waist: values.waist ? parseInt(values.waist) : undefined,
+						hips: values.hips ? parseInt(values.hips) : undefined,
+						arms: values.arms ? parseInt(values.arms) : undefined,
+						thighs: values.thighs ? parseInt(values.thighs) : undefined,
+						medicalConditions: values.medicalConditions || 'Ninguna',
 					},
 				};
+
+				// Only add membership info for new members
+				if (membershipInfo) {
+					memberData.membershipInfo = membershipInfo;
+				}
 
 				if (isEditMode && id) {
 					// Update existing member
@@ -210,16 +355,22 @@ const AddMemberPage = () => {
 				} else {
 					// Create new member
 					const createData: CreateMemberRequest = memberData;
-					await createMember(createData).unwrap();
+					console.log(createData);
+					const result = await createMember(createData).unwrap();
 
 					toast.success(
 						t('Member {{name}} has been successfully registered!', {
 							name: `${values.firstName} ${values.lastName}`,
 						}),
 					);
+
+					// Show success dialog with member data
+					setCreatedMember(result);
+					setShowSuccessDialog(true);
+					return; // Don't navigate yet, wait for dialog action
 				}
 
-				// Redirect after 2 seconds
+				// For edit mode, navigate directly
 				navigate('/gym-management/members/list');
 			} catch (error) {
 				toast.error(t('An error occurred while saving the member. Please try again.'));
@@ -236,6 +387,21 @@ const AddMemberPage = () => {
 			}
 		}
 	}, [formik.values.birthDate]);
+
+	// Auto-calculate BMI when height or weight changes
+	useEffect(() => {
+		const weight = parseInt(formik.values.currentWeight) || 0;
+		const height = parseInt(formik.values.height) || 0;
+
+		if (weight > 0 && height > 0) {
+			const calculatedBMI = calculateBMI(weight, height);
+			setBmi(calculatedBMI);
+			setBmiCategory(getBMICategory(calculatedBMI));
+		} else {
+			setBmi(0);
+			setBmiCategory(null);
+		}
+	}, [formik.values.currentWeight, formik.values.height]);
 
 	if (loadingMember) {
 		return (
@@ -274,7 +440,14 @@ const AddMemberPage = () => {
 				</SubHeaderRight>
 			</SubHeader>
 			<Page container='fluid'>
-				<form onSubmit={formik.handleSubmit}>
+				<form
+					onSubmit={(e) => {
+						console.log('Form submit event triggered');
+						console.log('Event:', e);
+						console.log('formik.handleSubmit:', formik.handleSubmit);
+						e.preventDefault(); // Prevent default form submission
+						formik.handleSubmit(e);
+					}}>
 					<div className='row g-4'>
 						{/* Personal Information */}
 						<div className='col-lg-6'>
@@ -428,6 +601,26 @@ const AddMemberPage = () => {
 											</FormGroup>
 										</div>
 										<div className='col-md-4'>
+											<FormGroup id='gender' label={t('Gender')}>
+												<Select
+													name='gender'
+													onChange={formik.handleChange}
+													onBlur={formik.handleBlur}
+													value={formik.values.gender}
+													ariaLabel={t('Select gender')}
+													isValid={formik.isValid}
+													isTouched={
+														formik.touched.gender &&
+														!!formik.errors.gender
+													}
+													invalidFeedback={formik.errors.gender}>
+													<Option value=''>{t('Select gender')}</Option>
+													<Option value='male'>{t('Male')}</Option>
+													<Option value='female'>{t('Female')}</Option>
+												</Select>
+											</FormGroup>
+										</div>
+										<div className='col-md-4'>
 											<FormGroup id='height' label={t('Height (cm)')}>
 												<Input
 													type='number'
@@ -465,6 +658,106 @@ const AddMemberPage = () => {
 												/>
 											</FormGroup>
 										</div>
+										<div className='col-md-4'>
+											<FormGroup id='chest' label={t('Chest (cm)')}>
+												<Input
+													type='number'
+													name='chest'
+													onChange={formik.handleChange}
+													onBlur={formik.handleBlur}
+													value={formik.values.chest}
+													min={60}
+													max={150}
+													placeholder={t('Chest measurement')}
+												/>
+											</FormGroup>
+										</div>
+										<div className='col-md-4'>
+											<FormGroup id='waist' label={t('Waist (cm)')}>
+												<Input
+													type='number'
+													name='waist'
+													onChange={formik.handleChange}
+													onBlur={formik.handleBlur}
+													value={formik.values.waist}
+													min={50}
+													max={150}
+													placeholder={t('Waist measurement')}
+												/>
+											</FormGroup>
+										</div>
+										<div className='col-md-4'>
+											<FormGroup id='hips' label={t('Hips (cm)')}>
+												<Input
+													type='number'
+													name='hips'
+													onChange={formik.handleChange}
+													onBlur={formik.handleBlur}
+													value={formik.values.hips}
+													min={60}
+													max={150}
+													placeholder={t('Hips measurement')}
+												/>
+											</FormGroup>
+										</div>
+										<div className='col-md-4'>
+											<FormGroup id='arms' label={t('Arms (cm)')}>
+												<Input
+													type='number'
+													name='arms'
+													onChange={formik.handleChange}
+													onBlur={formik.handleBlur}
+													value={formik.values.arms}
+													min={20}
+													max={60}
+													placeholder={t('Arms measurement')}
+												/>
+											</FormGroup>
+										</div>
+										<div className='col-md-4'>
+											<FormGroup id='thighs' label={t('Thighs (cm)')}>
+												<Input
+													type='number'
+													name='thighs'
+													onChange={formik.handleChange}
+													onBlur={formik.handleBlur}
+													value={formik.values.thighs}
+													min={40}
+													max={100}
+													placeholder={t('Thighs measurement')}
+												/>
+											</FormGroup>
+										</div>
+										{/* BMI Display */}
+										{bmi > 0 && bmiCategory && (
+											<div className='col-12'>
+												<div className='card border-0 bg-light'>
+													<div className='card-body'>
+														<div className='row align-items-center'>
+															<div className='col-md-6'>
+																<h6 className='mb-1'>
+																	{t('Body Mass Index (BMI)')}
+																</h6>
+																<div className='d-flex align-items-center gap-3'>
+																	<span className='h4 mb-0'>
+																		{bmi}
+																	</span>
+																	<span
+																		className={`badge bg-${bmiCategory.color}`}>
+																		{bmiCategory.category}
+																	</span>
+																</div>
+															</div>
+															<div className='col-md-6'>
+																<small className='text-muted'>
+																	{bmiCategory.feedback}
+																</small>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										)}
 										<div className='col-12'>
 											<FormGroup
 												id='medicalConditions'
@@ -481,152 +774,242 @@ const AddMemberPage = () => {
 												/>
 											</FormGroup>
 										</div>
-										<div className='col-12'>
-											<FormGroup id='goals' label={t('Fitness Goals')}>
-												<Textarea
-													name='goals'
-													onChange={formik.handleChange}
-													onBlur={formik.handleBlur}
-													value={formik.values.goals}
-													rows={2}
-													placeholder={t('What are their fitness goals?')}
-												/>
-											</FormGroup>
-										</div>
 									</div>
 								</CardBody>
 							</Card>
 						</div>
 
-						{/* Membership Information */}
-						<div className='col-lg-12'>
-							<Card>
-								<CardHeader>
-									<CardLabel icon='CardMembership' iconColor='info'>
-										<CardTitle>{t('Membership Information')}</CardTitle>
-									</CardLabel>
-								</CardHeader>
-								<CardBody>
-									<div className='row g-3'>
-										<div className='col-12'>
-											<FormGroup
-												id='membershipPlan'
-												label={t('Membership Plan')}>
-												<Select
-													name='membershipPlan'
-													onChange={formik.handleChange}
-													onBlur={formik.handleBlur}
-													value={formik.values.membershipPlan}
-													ariaLabel={t('Select membership plan')}
-													isValid={formik.isValid}
-													isTouched={
-														formik.touched.membershipPlan &&
-														!!formik.errors.membershipPlan
-													}
-													invalidFeedback={formik.errors.membershipPlan}>
-													<Option value=''>
-														{t('Select a membership plan')}
-													</Option>
-													{mockMembershipPlans
-														.filter((plan) => plan.isActive)
-														.map((plan) => (
-															<Option key={plan.id} value={plan.id}>
-																{`${plan.name} - $${plan.price.toLocaleString()} (${
-																	plan.type === 'monthly'
-																		? t(
-																				'{{duration}} month(s)',
-																				{
-																					duration:
-																						plan.duration,
-																				},
-																			)
-																		: t('{{count}} visits', {
-																				count: plan.visitCount,
-																			})
-																})`}
-															</Option>
-														))}
-												</Select>
-											</FormGroup>
-										</div>
-										<div className='col-12'>
-											<FormGroup id='startDate' label={t('Start Date')}>
-												<Input
-													type='date'
-													name='startDate'
-													onChange={formik.handleChange}
-													onBlur={formik.handleBlur}
-													value={formik.values.startDate}
-												/>
-											</FormGroup>
-										</div>
-										{formik.values.membershipPlan && (
+						{/* Membership Information - Only show for new members */}
+						{!isEditMode && (
+							<div className='col-lg-12'>
+								<Card>
+									<CardHeader>
+										<CardLabel icon='CardMembership' iconColor='info'>
+											<CardTitle>{t('Membership Information')}</CardTitle>
+										</CardLabel>
+									</CardHeader>
+									<CardBody>
+										<div className='row g-3'>
 											<div className='col-12'>
-												<div className='alert alert-warning'>
-													{(() => {
-														const selectedPlan =
-															mockMembershipPlans.find(
-																(plan) =>
-																	plan.id ===
-																	formik.values.membershipPlan,
-															);
-														if (!selectedPlan) return null;
-
-														return (
-															<div>
-																<strong>{selectedPlan.name}</strong>
-																<br />
-																<small>
-																	{selectedPlan.description}
-																	<br />
-																	{t('Price')}: $
-																	{selectedPlan.price.toLocaleString()}
-																	<br />
-																	{t('Type')}:{' '}
-																	{selectedPlan.type === 'monthly'
-																		? t(
-																				'Monthly ({{duration}} month(s))',
-																				{
-																					duration:
-																						selectedPlan.duration,
-																				},
-																			)
-																		: t(
-																				'Count-based ({{count}} visits)',
-																				{
-																					count: selectedPlan.visitCount,
-																				},
-																			)}
-																	{selectedPlan.type ===
-																		'monthly' && (
-																		<>
-																			<br />
-																			{t('Expires')}:{' '}
-																			{dayjs(
-																				formik.values
-																					.startDate,
-																			)
-																				.add(
-																					selectedPlan.duration ||
-																						1,
-																					'month',
+												<FormGroup
+													id='membershipPlan'
+													label={t('Membership Plan')}>
+													<Select
+														name='membershipPlan'
+														onChange={formik.handleChange}
+														onBlur={formik.handleBlur}
+														value={formik.values.membershipPlan}
+														ariaLabel={t('Select membership plan')}
+														isValid={formik.isValid}
+														isTouched={
+															formik.touched.membershipPlan &&
+															!!formik.errors.membershipPlan
+														}
+														invalidFeedback={
+															formik.errors.membershipPlan
+														}>
+														<Option value=''>
+															{t('Select a membership plan')}
+														</Option>
+														{mockMembershipPlans
+															.filter((plan) => plan.isActive)
+															.map((plan) => (
+																<Option
+																	key={plan.id}
+																	value={plan.id}>
+																	{`${plan.name} - $${plan.price.toLocaleString()} (${
+																		plan.type === 'monthly'
+																			? t(
+																					'{{duration}} month(s)',
+																					{
+																						duration:
+																							plan.duration,
+																					},
 																				)
-																				.format(
-																					'DD/MM/YYYY',
-																				)}
-																		</>
-																	)}
-																</small>
-															</div>
-														);
-													})()}
-												</div>
+																			: t(
+																					'{{count}} visits',
+																					{
+																						count: plan.visitCount,
+																					},
+																				)
+																	})`}
+																</Option>
+															))}
+													</Select>
+												</FormGroup>
 											</div>
-										)}
-									</div>
-								</CardBody>
-							</Card>
-						</div>
+											<div className='col-12'>
+												<FormGroup id='startDate' label={t('Start Date')}>
+													<Input
+														type='date'
+														name='startDate'
+														onChange={formik.handleChange}
+														onBlur={formik.handleBlur}
+														value={formik.values.startDate}
+													/>
+												</FormGroup>
+											</div>
+											{/* Payment Amount - Only show for new members */}
+											{!isEditMode && (
+												<div className='col-12'>
+													<FormGroup
+														id='paymentAmount'
+														label={t('Payment Amount (USD)')}>
+														<Input
+															type='number'
+															name='paymentAmount'
+															onChange={formik.handleChange}
+															onBlur={formik.handleBlur}
+															value={formik.values.paymentAmount}
+															placeholder={t('Enter payment amount')}
+															min={0}
+															step={0.01}
+															isValid={formik.isValid}
+															isTouched={
+																formik.touched.paymentAmount &&
+																!!formik.errors.paymentAmount
+															}
+															invalidFeedback={
+																formik.errors.paymentAmount
+															}
+														/>
+													</FormGroup>
+												</div>
+											)}
+											{formik.values.membershipPlan && (
+												<div className='col-12'>
+													<div className='alert alert-warning'>
+														{(() => {
+															const selectedPlan =
+																mockMembershipPlans.find(
+																	(plan) =>
+																		plan.id ===
+																		formik.values
+																			.membershipPlan,
+																);
+															if (!selectedPlan) return null;
+
+															const paymentAmount =
+																parseFloat(
+																	formik.values.paymentAmount,
+																) || 0;
+															const planPrice = selectedPlan.price;
+															const difference =
+																planPrice - paymentAmount;
+
+															return (
+																<div>
+																	<strong>
+																		{selectedPlan.name}
+																	</strong>
+																	<small>
+																		<br />
+																		<strong>
+																			{t('Plan Price')}:
+																		</strong>{' '}
+																		$
+																		{planPrice.toLocaleString()}
+																		{!isEditMode &&
+																			formik.values
+																				.paymentAmount && (
+																				<>
+																					<br />
+																					<strong>
+																						{t(
+																							'Payment Amount',
+																						)}
+																					</strong>
+																					: $
+																					{paymentAmount.toLocaleString()}
+																					<br />
+																					<strong>
+																						<span
+																							className={
+																								difference >
+																								0
+																									? 'text-danger'
+																									: difference <
+																										  0
+																										? 'text-success'
+																										: 'text-muted'
+																							}>
+																							{difference >
+																							0
+																								? t(
+																										'Remaining: ${{amount}}',
+																										{
+																											amount: difference.toLocaleString(),
+																										},
+																									)
+																								: difference <
+																									  0
+																									? t(
+																											'Overpaid: ${{amount}}',
+																											{
+																												amount: Math.abs(
+																													difference,
+																												).toLocaleString(),
+																											},
+																										)
+																									: t(
+																											'Fully Paid',
+																										)}
+																						</span>
+																					</strong>
+																				</>
+																			)}
+																		<br />
+																		<strong>
+																			{t('Type')}:
+																		</strong>{' '}
+																		{selectedPlan.type ===
+																		'monthly'
+																			? t(
+																					'Monthly ({{duration}} month(s))',
+																					{
+																						duration:
+																							selectedPlan.duration,
+																					},
+																				)
+																			: t(
+																					'Count-based ({{count}} visits)',
+																					{
+																						count: selectedPlan.visitCount,
+																					},
+																				)}
+																		{selectedPlan.type ===
+																			'monthly' && (
+																			<>
+																				<br />
+																				<strong>
+																					{t('Expires')}:
+																				</strong>{' '}
+																				{dayjs(
+																					formik.values
+																						.startDate,
+																				)
+																					.add(
+																						selectedPlan.duration ||
+																							1,
+																						'month',
+																					)
+																					.format(
+																						'DD/MM/YYYY',
+																					)}
+																			</>
+																		)}
+																	</small>
+																</div>
+															);
+														})()}
+													</div>
+												</div>
+											)}
+										</div>
+									</CardBody>
+								</Card>
+							</div>
+						)}
 
 						{/* Form Actions */}
 						<div className='col-12'>
@@ -643,12 +1026,18 @@ const AddMemberPage = () => {
 												{t('Cancel')}
 											</Button>
 											<Button
-												type='submit'
+												type='button'
 												color='primary'
 												icon={isEditMode ? 'Save' : 'PersonAdd'}
 												isDisable={
 													!formik.isValid || isCreating || isUpdating
-												}>
+												}
+												onClick={() => {
+													console.log(
+														'Submit button clicked - calling formik.handleSubmit()',
+													);
+													formik.handleSubmit();
+												}}>
 												{(isCreating || isUpdating) && (
 													<Spinner isSmall inButton />
 												)}
@@ -668,6 +1057,18 @@ const AddMemberPage = () => {
 					</div>
 				</form>
 			</Page>
+
+			{/* Success Dialog */}
+			<MemberSuccessDialog
+				isOpen={showSuccessDialog}
+				onClose={() => setShowSuccessDialog(false)}
+				member={createdMember}
+				onNavigateToList={() => {
+					setShowSuccessDialog(false);
+					navigate('/gym-management/members/list');
+				}}
+				onKeepCreating={handleKeepCreating}
+			/>
 		</PageWrapper>
 	);
 };

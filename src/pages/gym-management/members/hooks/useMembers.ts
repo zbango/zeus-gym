@@ -6,8 +6,12 @@ import {
 	useUpdateMemberMutation,
 	useDeleteMemberMutation,
 	useUpdateMemberStatusMutation,
-} from '../store/api/membersApi';
-import { MemberListParams, CreateMemberRequest, UpdateMemberRequest } from '../types/member.types';
+} from '../../../../store/api/membersApi';
+import {
+	MemberListParams,
+	CreateMemberRequest,
+	UpdateMemberRequest,
+} from '../../../../types/member.types';
 
 export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 	const { t } = useTranslation();
@@ -31,14 +35,22 @@ export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 
 	// Parameter update functions
 	const updateParams = useCallback((newParams: Partial<MemberListParams>) => {
-		setParams((prev) => ({ ...prev, ...newParams }));
+		console.log('updateParams called with:', newParams);
+		setParams((prev) => {
+			const updated = { ...prev, ...newParams };
+			console.log('Params updated from:', prev, 'to:', updated);
+			return updated;
+		});
 	}, []);
 
 	const setPage = useCallback(
 		(page: number) => {
+			console.log('setPage called with:', page);
+			console.log('Current params before update:', params);
 			updateParams({ page });
+			console.log('updateParams called with page:', page);
 		},
-		[updateParams],
+		[updateParams, params],
 	);
 
 	const setPageSize = useCallback(

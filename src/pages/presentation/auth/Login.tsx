@@ -122,10 +122,7 @@ const Login: FC<ILoginProps> = ({ isSignUp }) => {
 	});
 
 	return (
-		<PageWrapper
-			isProtected={false}
-			title='Gym Login'
-			className={classNames({ 'bg-dark': true })}>
+		<PageWrapper isProtected={false} title='Login' className={classNames({ 'bg-dark': true })}>
 			<Page className='p-0'>
 				<div className='row h-100 align-items-center justify-content-center'>
 					<div className='col-xl-4 col-lg-6 col-md-8 shadow-3d-container'>

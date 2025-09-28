@@ -217,12 +217,6 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 										<div>{member.healthInfo.medicalConditions}</div>
 									</div>
 								)}
-								{member.healthInfo.goals && (
-									<div className='col-12'>
-										<small className='text-muted'>{t('Fitness Goals')}</small>
-										<div>{member.healthInfo.goals}</div>
-									</div>
-								)}
 							</div>
 						</CardBody>
 					</Card>

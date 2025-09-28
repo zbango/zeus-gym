@@ -12,23 +12,21 @@ export interface PersonalInfo {
 	email: string;
 	phone: string;
 	address: string;
-	emergencyContact: EmergencyContact;
 	birthDate: string;
 	identification: string;
 }
 
-export interface EmergencyContact {
-	name: string;
-	phone: string;
-	relationship: string;
-}
-
 export interface HealthInfo {
 	age: number;
+	gender: string;
 	height: number; // in cm
 	currentWeight: number; // in kg
+	chest?: number; // in cm
+	waist?: number; // in cm
+	hips?: number; // in cm
+	arms?: number; // in cm
+	thighs?: number; // in cm
 	medicalConditions?: string;
-	goals?: string;
 }
 
 export interface ProgressMeasurement {
@@ -65,9 +63,7 @@ export interface Member extends BaseEntity {
 
 // API Request/Response types
 export interface CreateMemberRequest {
-	personalInfo: Omit<PersonalInfo, 'emergencyContact'> & {
-		emergencyContact: Omit<EmergencyContact, 'id'>;
-	};
+	personalInfo: PersonalInfo;
 	healthInfo: Omit<HealthInfo, 'id'>;
 	membershipInfo: Omit<MembershipInfo, 'id'>;
 }

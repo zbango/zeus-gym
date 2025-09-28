@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { TableColumn, TableConfig } from '../../types/member.types';
+import { TableColumn } from '../../types/member.types';
 import { useTranslation } from 'react-i18next';
 import classNames from 'classnames';
 import Button from '../bootstrap/Button';
-import Icon from '../icon/Icon';
 
 interface DynamicTableProps<T = any> {
 	data: T[];
@@ -285,7 +284,7 @@ const DynamicTable = <T extends Record<string, any>>({
 
 			{/* Pagination */}
 			{pagination && (
-				<div className='d-flex justify-content-between align-items-center mt-3 px-3'>
+				<div className='d-flex justify-content-between align-items-center mt-3 px-3 mb-3'>
 					{/* Page size selector */}
 					<div className='d-flex align-items-center gap-2'>
 						<span className='text-muted small'>{t('Show')}</span>

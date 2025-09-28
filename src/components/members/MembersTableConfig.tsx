@@ -3,12 +3,14 @@ import { TableColumn } from '../../types/member.types';
 import { Member } from '../../types/member.types';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { toast } from 'react-toastify';
 import Avatar from '../Avatar';
 import Button from '../bootstrap/Button';
 import Dropdown, { DropdownItem, DropdownMenu, DropdownToggle } from '../bootstrap/Dropdown';
 import Icon from '../icon/Icon';
 import classNames from 'classnames';
 import useDarkMode from '../../hooks/useDarkMode';
+import { useDeleteMemberMutation } from '../../store/api/membersApi';
 
 export const useMembersTableColumns = (
 	onViewProfile?: (member: Member) => void,
@@ -16,6 +18,7 @@ export const useMembersTableColumns = (
 ): TableColumn<Member>[] => {
 	const { t } = useTranslation();
 	const { darkModeStatus } = useDarkMode();
+	const [deleteMember, { isLoading: isDeleting }] = useDeleteMemberMutation();
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
@@ -29,6 +32,20 @@ export const useMembersTableColumns = (
 				return 'secondary';
 			default:
 				return 'secondary';
+		}
+	};
+
+	const handleDeleteMember = async (member: Member) => {
+		try {
+			await deleteMember(member.id).unwrap();
+			toast.success(
+				t('Member {{name}} has been successfully deleted!', {
+					name: `${member.personalInfo.firstName} ${member.personalInfo.lastName}`,
+				}),
+			);
+		} catch (error) {
+			toast.error(t('Failed to delete member. Please try again.'));
+			console.error('Delete member error:', error);
 		}
 	};
 
@@ -88,34 +105,16 @@ export const useMembersTableColumns = (
 			dataIndex: 'membershipInfo.status',
 			sortable: true,
 			render: (_, record) => (
-				<Dropdown>
-					<DropdownToggle hasIcon={false}>
-						<Button
-							isLink
-							color={getStatusColor(record.membershipInfo.status)}
-							icon='Circle'
-							className='text-nowrap'>
-							{t(
-								record.membershipInfo.status.charAt(0).toUpperCase() +
-									record.membershipInfo.status.slice(1),
-							)}
-						</Button>
-					</DropdownToggle>
-					<DropdownMenu>
-						{['active', 'inactive', 'suspended', 'expired'].map((status) => (
-							<DropdownItem key={status}>
-								<div>
-									<Icon
-										icon='Circle'
-										color={getStatusColor(status)}
-										className='me-2'
-									/>
-									{t(status.charAt(0).toUpperCase() + status.slice(1))}
-								</div>
-							</DropdownItem>
-						))}
-					</DropdownMenu>
-				</Dropdown>
+				<Button
+					isLink
+					color={getStatusColor(record.membershipInfo.status)}
+					icon='Circle'
+					className='text-nowrap'>
+					{t(
+						record.membershipInfo.status.charAt(0).toUpperCase() +
+							record.membershipInfo.status.slice(1),
+					)}
+				</Button>
 			),
 		},
 		{
@@ -215,15 +214,15 @@ export const useMembersTableColumns = (
 						<DropdownItem
 							onClick={(e: React.MouseEvent) => {
 								e.stopPropagation();
+								if (isDeleting) return;
 								// Handle delete member
 								if (confirm(t('Are you sure you want to delete this member?'))) {
-									console.log('Delete member:', record.id);
-									// TODO: Implement delete functionality
+									handleDeleteMember(record);
 								}
 							}}>
-							<div className='text-danger'>
+							<div className={`text-danger ${isDeleting ? 'opacity-50' : ''}`}>
 								<Icon icon='Delete' className='me-2' />
-								{t('Delete Member')}
+								{isDeleting ? t('Deleting...') : t('Delete Member')}
 							</div>
 						</DropdownItem>
 					</DropdownMenu>
