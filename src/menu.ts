@@ -126,12 +126,6 @@ export const demoPagesMenu = {
 			},
 		},
 	},
-	// gymCheckin: {
-	// 	id: 'gymCheckin',
-	// 	text: 'Check-in',
-	// 	path: 'gym-management/checkin',
-	// 	icon: 'LoginTwoTone',
-	// },
 	gymStore: {
 		id: 'gymStore',
 		text: 'Store',
@@ -797,4 +791,82 @@ export const productsExampleMenu = {
 	companyB: { id: 'companyB', text: 'Company B', path: '/', subMenu: null },
 	companyC: { id: 'companyC', text: 'Company C', path: '/', subMenu: null },
 	companyD: { id: 'companyD', text: 'Company D', path: '/', subMenu: null },
+};
+
+// Menu permission mapping
+const menuPermissions: Record<string, { roles: string[]; permissions: string[] }> = {
+	gymDashboard: { roles: ['admin', 'staff'], permissions: [] },
+	gymMembers: { roles: ['admin', 'staff'], permissions: [] },
+	membersList: { roles: ['admin', 'staff'], permissions: [] },
+	addMember: { roles: ['admin', 'staff'], permissions: ['members.create'] },
+	gymMemberships: { roles: ['admin', 'staff'], permissions: [] },
+	membershipPlans: { roles: ['admin'], permissions: [] },
+	payments: { roles: ['admin', 'staff'], permissions: ['payments.create'] },
+	renewals: { roles: ['admin', 'staff'], permissions: ['renewals.create'] },
+	gymStore: { roles: ['admin', 'staff'], permissions: [] },
+	products: { roles: ['admin', 'staff'], permissions: ['store.create'] },
+	sales: { roles: ['admin', 'staff'], permissions: ['store.create'] },
+	inventory: { roles: ['admin'], permissions: ['store.edit'] },
+	gymUsers: { roles: ['admin'], permissions: [] },
+	gymSettings: { roles: ['admin', 'staff'], permissions: ['settings.view'] },
+};
+
+// Function to check if user has access to a menu item
+const hasMenuAccess = (menuId: string, userRole: string, userPermissions: string[]): boolean => {
+	const permission = menuPermissions[menuId];
+	if (!permission) return true; // If no permission defined, allow access
+
+	// Check role requirement
+	if (permission.roles.length > 0 && !permission.roles.includes(userRole)) {
+		return false;
+	}
+
+	// Check specific permissions
+	if (permission.permissions.length > 0) {
+		return permission.permissions.some(
+			(perm) => userPermissions.includes(perm) || userPermissions.includes('all'),
+		);
+	}
+
+	return true;
+};
+
+// Function to filter menu items based on user permissions
+const filterMenuItems = (menuItems: any, userRole: string, userPermissions: string[]): any => {
+	const filtered: any = {};
+
+	Object.keys(menuItems).forEach((key) => {
+		const item = menuItems[key];
+
+		// Check if main menu item has access
+		if (hasMenuAccess(key, userRole, userPermissions)) {
+			// If item has subMenu, filter submenu items
+			if (item.subMenu) {
+				const filteredSubMenu: any = {};
+				Object.keys(item.subMenu).forEach((subKey) => {
+					if (hasMenuAccess(subKey, userRole, userPermissions)) {
+						filteredSubMenu[subKey] = item.subMenu[subKey];
+					}
+				});
+
+				// Only include main item if it has accessible submenu items or no submenu requirement
+				if (Object.keys(filteredSubMenu).length > 0) {
+					filtered[key] = {
+						...item,
+						subMenu: filteredSubMenu,
+					};
+				}
+			} else {
+				// No submenu, include if main item has access
+				filtered[key] = item;
+			}
+		}
+	});
+
+	return filtered;
+};
+
+// Function to generate gym menu based on user permissions
+export const generateGymMenu = (userRole: string, userPermissions: string[] = []) => {
+	return filterMenuItems(demoPagesMenu, userRole, userPermissions);
 };

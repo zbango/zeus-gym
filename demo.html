@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="x-apple-disable-message-reformatting" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Bienvenido a Zeus Gym</title>
+		<style>
+			/* Dark mode (compatible con muchos clientes) */
+			@media (prefers-color-scheme: dark) {
+				body,
+				.bg {
+					background: #0b0d12 !important;
+					color: #e6e9ef !important;
+				}
+				.card {
+					background: #121621 !important;
+					border-color: #1f2430 !important;
+				}
+				.btn {
+					background: #ff2d55 !important;
+					color: #ffffff !important;
+				}
+				.muted {
+					color: #aab2bf !important;
+				}
+				.credentials-box {
+					background: #1a1f2e !important;
+					border-color: #2d3748 !important;
+				}
+				.credentials-box p {
+					color: #e6e9ef !important;
+				}
+			}
+			/* Botones que sigan siendo clicables si el cliente quita estilos */
+			a.btn {
+				text-decoration: none;
+				display: inline-block;
+			}
+		</style>
+	</head>
+	<body
+		style="
+			margin: 0;
+			padding: 0;
+			background: #f3f5f8;
+			font-family:
+				-apple-system,
+				Segoe UI,
+				Roboto,
+				Helvetica,
+				Arial,
+				sans-serif;
+			color: #1d2330;
+		">
+		<!-- Preheader (texto de vista previa) -->
+		<div style="display: none; max-height: 0; overflow: hidden; opacity: 0">
+			Tu cuenta de Zeus Gym está lista. Aquí tienes tu usuario y contraseña.
+		</div>
+
+		<table
+			role="presentation"
+			width="100%"
+			cellspacing="0"
+			cellpadding="0"
+			style="background: #f3f5f8"
+			class="bg">
+			<tr>
+				<td align="center" style="padding: 32px 12px">
+					<table
+						role="presentation"
+						width="100%"
+						cellspacing="0"
+						cellpadding="0"
+						style="max-width: 600px">
+						<!-- Header / Logo -->
+						<tr>
+							<td align="center" style="padding: 12px 0 24px">
+								<a href="https://zeusgym.online/auth-pages/login" target="_blank"
+									><img
+										src="https://i.postimg.cc/qhfXW1hq/logo.png"
+										border="0"
+										alt="logo"
+								/></a>
+							</td>
+						</tr>
+
+						<!-- Card -->
+						<tr>
+							<td
+								class="card"
+								style="
+									background: #ffffff;
+									border: 1px solid #e5e9f2;
+									border-radius: 12px;
+									padding: 28px;
+								">
+								<h1
+									style="
+										margin: 0 0 12px;
+										font-size: 22px;
+										line-height: 1.3;
+										font-weight: 700;
+									">
+									¡Bienvenido(a) a Zeus Gym!
+								</h1>
+
+								<p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6">
+									Tu cuenta ha sido creada. Usa las siguientes credenciales para
+									tu primer inicio de sesión:
+								</p>
+
+								<table
+									role="presentation"
+									cellspacing="0"
+									cellpadding="0"
+									width="100%"
+									style="margin: 0 0 16px">
+									<tr>
+										<td
+											class="credentials-box"
+											style="
+												padding: 10px 12px;
+												background: #f7f9fc;
+												border: 1px solid #e5e9f2;
+												border-radius: 8px;
+											">
+											<p style="margin: 0; font-size: 14px; line-height: 1.6">
+												<strong>Usuario:</strong>
+												<span style="word-break: break-all">{username}</span
+												><br />
+												<strong>Contraseña:</strong>
+												<span style="word-break: break-all">{####}</span>
+											</p>
+										</td>
+									</tr>
+								</table>
+
+								<p style="margin: 0 0 18px; font-size: 15px; line-height: 1.6">
+									Por seguridad, se recomienda cambiar la contraseña al ingresar
+									por primera vez.
+								</p>
+
+								<!-- CTA -->
+								<table
+									role="presentation"
+									cellspacing="0"
+									cellpadding="0"
+									style="margin: 0 0 12px">
+									<tr>
+										<td>
+											<a
+												class="btn"
+												href="https://zeusgym.online/auth-pages/login"
+												target="_blank"
+												style="
+													background: #0d6efd;
+													color: #ffffff;
+													padding: 12px 18px;
+													border-radius: 10px;
+													font-weight: 600;
+													font-size: 15px;
+												">
+												Acceder a Zeus Gym
+											</a>
+										</td>
+									</tr>
+								</table>
+
+								<p
+									class="muted"
+									style="margin: 8px 0 0; color: #6b7280; font-size: 12px">
+									Si el botón no funciona, copia y pega esta URL en tu
+									navegador:<br />
+									<span style="word-break: break-all"
+										>https://zeusgym.online/auth-pages/login</span
+									>
+								</p>
+							</td>
+						</tr>
+
+						<!-- Footer -->
+						<tr>
+							<td
+								align="center"
+								style="padding: 18px 8px; color: #6b7280; font-size: 12px">
+								© <span id="y">2025</span>
+								<a href="https://tabangos.cloud" target="_blank">tabangos.cloud</a>
+								· Todos los derechos reservados.<br />
+								Si no solicitaste esta cuenta, ignora este correo o contacta a tu
+								administrador.
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+
+		<script>
+			// Año dinámico para algunos clientes que respetan JS (opcional)
+			try {
+				document.getElementById('y').textContent = new Date().getFullYear();
+			} catch (e) {}
+		</script>
+	</body>
+</html>

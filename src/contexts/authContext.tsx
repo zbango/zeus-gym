@@ -1,15 +1,15 @@
 import React, { createContext, FC, ReactNode, useEffect, useMemo, useState } from 'react';
 import { getUserDataWithUsername, IUserProps } from '../common/data/userDummyData';
 import { IGymUser } from '../types/gym-types';
-import { mockGymUsers } from '../common/data/gymMockData';
+import authService from '../services/authService';
 
-// Helper function to convert gym user to template user format
+// Helper function to convert gym user to template user format (for template compatibility)
 const mapGymUserToTemplateUser = (gymUser: IGymUser): Partial<IUserProps> => {
+	console.log('🔄 AuthContext: Mapping gym user to template user:', gymUser);
 	return {
 		id: gymUser.id,
 		username: gymUser.username,
-		name: gymUser.name.split(' ')[0] || gymUser.name,
-		surname: gymUser.name.split(' ')[1] || '',
+		fullName: gymUser.fullName.split(' ')[0] || gymUser.fullName,
 		position: gymUser.role === 'admin' ? 'Gym Administrator' : 'Gym Staff',
 		email: gymUser.email,
 		isOnline: true,
@@ -30,7 +30,7 @@ export interface IAuthContextProps {
 	// Gym auth integration
 	gymUser: IGymUser | null;
 	gymLogin: (username: string, password: string) => Promise<boolean>;
-	gymLogout: () => void;
+	gymLogout: () => Promise<void>;
 	isGymAuthenticated: boolean;
 	isGymAdmin: boolean;
 	isGymStaff: boolean;
@@ -51,32 +51,36 @@ export const AuthContextProvider: FC<IAuthContextProviderProps> = ({ children })
 	const [gymUser, setGymUser] = useState<IGymUser | null>(null);
 	const [gymLoading, setGymLoading] = useState(true);
 
-	// Initialize gym auth from localStorage
+	// Initialize gym auth from localStorage and API
 	useEffect(() => {
-		const initGymAuth = () => {
+		const initGymAuth = async () => {
 			console.log('🔄 AuthContext: Initializing gym auth on refresh');
 			setGymLoading(true);
-			const storedUserId = localStorage.getItem('gym_auth_user_id');
-			console.log('🔄 Stored user ID:', storedUserId);
 
-			if (storedUserId) {
-				const foundUser = mockGymUsers.find((u) => u.id === storedUserId);
-				console.log('🔄 Found user from storage:', foundUser?.username);
-				if (foundUser) {
-					setGymUser(foundUser);
+			try {
+				// Check if user is authenticated
+				if (authService.isAuthenticated()) {
+					// Try to get user profile from API
+					const gymUser = await authService.getMe();
+
+					setGymUser(gymUser);
 					// Also set template user data for compatibility
-					setUser(foundUser.username);
-					setUserData(mapGymUserToTemplateUser(foundUser));
-					console.log('✅ Gym user restored from localStorage');
+					setUser(gymUser.username);
+					setUserData(mapGymUserToTemplateUser(gymUser));
+					console.log('✅ Gym user restored from API:', gymUser.username);
 				} else {
-					console.log('❌ Invalid stored user, clearing localStorage');
-					localStorage.removeItem('gym_auth_user_id');
+					console.log('❌ No valid authentication found');
+					// Clear any stale data
+					authService.logout();
 				}
-			} else {
-				console.log('❌ No stored user found');
+			} catch (error) {
+				console.error('❌ Failed to restore gym user:', error);
+				// Clear authentication on error
+				authService.logout();
+			} finally {
+				setGymLoading(false);
+				console.log('🔄 Gym auth initialization complete');
 			}
-			setGymLoading(false);
-			console.log('🔄 Gym auth initialization complete');
 		};
 
 		initGymAuth();
@@ -100,36 +104,34 @@ export const AuthContextProvider: FC<IAuthContextProviderProps> = ({ children })
 		setGymLoading(true);
 
 		try {
-			await new Promise((resolve) => setTimeout(resolve, 300));
+			// Authenticate with API
+			await authService.login(username, password);
 
-			const foundUser = mockGymUsers.find(
-				(u) => u.username === username && u.password === password,
-			);
+			// Get user profile
+			const gymUser = await authService.getMe();
 
-			if (foundUser) {
-				setGymUser(foundUser);
-				// Also set template user data for compatibility
-				setUser(foundUser.username);
-				setUserData(mapGymUserToTemplateUser(foundUser));
-				localStorage.setItem('gym_auth_user_id', foundUser.id);
-				setGymLoading(false);
-				return true;
-			} else {
-				setGymLoading(false);
-				return false;
-			}
-		} catch {
+			setGymUser(gymUser);
+			// Also set template user data for compatibility
+			setUser(gymUser.username);
+			setUserData(mapGymUserToTemplateUser(gymUser));
+
+			setGymLoading(false);
+			return true;
+		} catch (error) {
+			console.error('Login failed:', error);
 			setGymLoading(false);
 			return false;
 		}
 	};
 
-	const gymLogout = () => {
+	const gymLogout = async () => {
+		// Clear API tokens and stored data
+		await authService.logout();
+
 		setGymUser(null);
 		// Also clear template user data
 		setUser('');
 		setUserData({});
-		localStorage.removeItem('gym_auth_user_id');
 	};
 
 	const value = useMemo(() => {

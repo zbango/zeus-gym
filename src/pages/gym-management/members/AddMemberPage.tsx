@@ -260,19 +260,6 @@ const AddMemberPage = () => {
 			) {
 				errors.currentWeight = t('Weight must be between 40kg and 200kg');
 			}
-			console.log('=== VALIDATION DEBUG ===');
-			console.log('Validation errors:', errors);
-			console.log('Form values:', values);
-			console.log('isEditMode:', isEditMode);
-			console.log('Object.keys(errors).length:', Object.keys(errors).length);
-			console.log('========================');
-
-			// Temporarily return empty errors to test submission
-			if (Object.keys(errors).length > 0) {
-				console.log('BLOCKING SUBMISSION DUE TO ERRORS:', errors);
-				// TEMPORARY: Return empty errors to test submission
-				// return {};
-			}
 
 			return errors;
 		},

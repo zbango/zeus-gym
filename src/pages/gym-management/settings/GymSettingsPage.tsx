@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import SubHeader, { SubHeaderLeft, SubHeaderRight } from '../../../layout/SubHeader/SubHeader';
@@ -16,6 +16,9 @@ import useDarkMode from '../../../hooks/useDarkMode';
 import Avatar from '../../../components/Avatar';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../../../contexts/authContext';
+import FormGroup from '../../../components/bootstrap/forms/FormGroup';
+import Input from '../../../components/bootstrap/forms/Input';
+import Alert from '../../../components/bootstrap/Alert';
 
 const GymSettingsPage = () => {
 	const { t } = useTranslation();
@@ -23,10 +26,79 @@ const GymSettingsPage = () => {
 	const { themeStatus } = useDarkMode();
 	const navigate = useNavigate();
 
+	// Password update state
+	const [passwordData, setPasswordData] = useState({
+		currentPassword: '',
+		newPassword: '',
+		confirmPassword: '',
+	});
+	const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+	const [passwordSuccess, setPasswordSuccess] = useState(false);
+	const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
 	const handleLogout = () => {
 		if (confirm(t('Are you sure you want to logout?'))) {
 			logout();
 			navigate('/auth-pages/login');
+		}
+	};
+
+	// Password validation function
+	const validatePassword = (password: string): string[] => {
+		const errors: string[] = [];
+
+		if (password.length < 8) {
+			errors.push(t('Password must be at least 8 characters long'));
+		}
+
+		if (!/[A-Z]/.test(password)) {
+			errors.push(t('Password must contain at least one uppercase letter'));
+		}
+
+		if (!/[.!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+			errors.push(t('Password must contain at least one symbol (like . ! @ # etc.)'));
+		}
+
+		return errors;
+	};
+
+	// Handle password update
+	const handlePasswordUpdate = async () => {
+		setPasswordErrors([]);
+		setPasswordSuccess(false);
+
+		// Validate passwords match
+		if (passwordData.newPassword !== passwordData.confirmPassword) {
+			setPasswordErrors([t('New passwords do not match')]);
+			return;
+		}
+
+		// Validate new password requirements
+		const validationErrors = validatePassword(passwordData.newPassword);
+		if (validationErrors.length > 0) {
+			setPasswordErrors(validationErrors);
+			return;
+		}
+
+		setIsUpdatingPassword(true);
+
+		try {
+			// TODO: Implement API call to update password
+			// await authService.updatePassword(passwordData.currentPassword, passwordData.newPassword);
+
+			// Simulate API call for now
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+
+			setPasswordSuccess(true);
+			setPasswordData({
+				currentPassword: '',
+				newPassword: '',
+				confirmPassword: '',
+			});
+		} catch (error) {
+			setPasswordErrors([t('Failed to update password. Please try again.')]);
+		} finally {
+			setIsUpdatingPassword(false);
 		}
 	};
 
@@ -113,8 +185,116 @@ const GymSettingsPage = () => {
 						</Card>
 					</div>
 
-					{/* User Permissions */}
+					{/* Password Update Section */}
 					<div className='col-lg-8'>
+						<Card stretch>
+							<CardHeader>
+								<CardLabel icon='Lock' iconColor='warning'>
+									<CardTitle>{t('Change Password')}</CardTitle>
+								</CardLabel>
+							</CardHeader>
+							<CardBody>
+								{passwordSuccess && (
+									<Alert color='success' icon='CheckCircle' className='mb-3'>
+										{t('Password updated successfully!')}
+									</Alert>
+								)}
+
+								{passwordErrors.length > 0 && (
+									<Alert color='danger' icon='Error' className='mb-3'>
+										<ul className='mb-0'>
+											{passwordErrors.map((error, index) => (
+												<li key={index}>{error}</li>
+											))}
+										</ul>
+									</Alert>
+								)}
+
+								<div className='row g-3'>
+									<div className='col-12'>
+										<FormGroup
+											id='currentPassword'
+											label={t('Current Password')}
+											isFloating>
+											<Input
+												type='password'
+												value={passwordData.currentPassword}
+												onChange={(e) =>
+													setPasswordData({
+														...passwordData,
+														currentPassword: e.target.value,
+													})
+												}
+												placeholder={t('Enter current password')}
+											/>
+										</FormGroup>
+									</div>
+									<div className='col-12'>
+										<FormGroup
+											id='newPassword'
+											label={t('New Password')}
+											isFloating>
+											<Input
+												type='password'
+												value={passwordData.newPassword}
+												onChange={(e) =>
+													setPasswordData({
+														...passwordData,
+														newPassword: e.target.value,
+													})
+												}
+												placeholder={t('Enter new password')}
+											/>
+										</FormGroup>
+									</div>
+									<div className='col-12'>
+										<FormGroup
+											id='confirmPassword'
+											label={t('Confirm New Password')}
+											isFloating>
+											<Input
+												type='password'
+												value={passwordData.confirmPassword}
+												onChange={(e) =>
+													setPasswordData({
+														...passwordData,
+														confirmPassword: e.target.value,
+													})
+												}
+												placeholder={t('Confirm new password')}
+											/>
+										</FormGroup>
+									</div>
+									<div className='col-12'>
+										<div className='alert alert-info'>
+											<Icon icon='Info' className='me-2' />
+											<strong>{t('Password Requirements:')}</strong>
+											<ul className='mb-0 mt-2'>
+												<li>{t('At least 8 characters long')}</li>
+												<li>{t('At least one uppercase letter (A-Z)')}</li>
+												<li>{t('At least one symbol (. ! @ # etc.)')}</li>
+											</ul>
+										</div>
+									</div>
+									<div className='col-12'>
+										<Button
+											color='primary'
+											icon='Save'
+											onClick={handlePasswordUpdate}
+											isDisable={isUpdatingPassword}
+											isLoading={isUpdatingPassword}>
+											{isUpdatingPassword
+												? t('Updating...')
+												: t('Update Password')}
+										</Button>
+									</div>
+								</div>
+							</CardBody>
+						</Card>
+					</div>
+
+					{/* User Permissions */}
+					<div className='col-12'>
 						<Card stretch>
 							<CardHeader>
 								<CardLabel icon='Security' iconColor='info'>

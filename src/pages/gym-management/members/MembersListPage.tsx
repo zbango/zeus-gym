@@ -61,7 +61,7 @@ const MembersListPage = () => {
 	});
 
 	return (
-		<PageWrapper title='Members List' className='pt-4'>
+		<PageWrapper title={t('Members List')} className='pt-4'>
 			<SubHeader>
 				<SubHeaderLeft>
 					<PageBreadcrumbs

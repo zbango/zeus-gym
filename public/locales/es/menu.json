@@ -30,5 +30,8 @@
 	"User Types": "Tipos de Usuario",
 	"Admin": "Administrador",
 	"Staff": "Personal",
-	"Member": "Miembro"
+	"Member": "Miembro",
+	"Logout": "Cerrar Sesión",
+	"DarkMode": "Modo Oscuro",
+	"LightMode": "Modo Claro"
 }

@@ -151,19 +151,7 @@ const Login: FC<ILoginProps> = ({ isSignUp }) => {
 										{gymLoginError}
 									</Alert>
 								)}
-								<Alert color='info' isLight>
-									<div className='row'>
-										<div className='col-12 mb-2'>
-											<strong>{t('Demo Gym Credentials')}:</strong>
-										</div>
-										<div className='col-6'>
-											<strong>{t('Admin')}:</strong> admin / admin123
-										</div>
-										<div className='col-6'>
-											<strong>{t('Staff')}:</strong> staff / staff123
-										</div>
-									</div>
-								</Alert>
+
 								<form className='row g-4'>
 									<>
 										<div className='col-12'>
@@ -200,40 +188,6 @@ const Login: FC<ILoginProps> = ({ isSignUp }) => {
 													placeholder={t('Enter gym password')}
 												/>
 											</FormGroup>
-										</div>
-										<div className='col-12 text-center'>
-											<div className='row g-2'>
-												<div className='col-6'>
-													<Button
-														color='info'
-														size='sm'
-														isLight
-														className='w-100'
-														onClick={() => {
-															formik.setValues({
-																loginUsername: 'admin',
-																loginPassword: 'admin123',
-															});
-														}}>
-														{t('Fill Admin')}
-													</Button>
-												</div>
-												<div className='col-6'>
-													<Button
-														color='warning'
-														size='sm'
-														isLight
-														className='w-100'
-														onClick={() => {
-															formik.setValues({
-																loginUsername: 'staff',
-																loginPassword: 'staff123',
-															});
-														}}>
-														{t('Fill Staff')}
-													</Button>
-												</div>
-											</div>
 										</div>
 										<div className='col-12'>
 											<Button

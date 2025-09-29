@@ -17,7 +17,7 @@ import ThemeContext from '../../contexts/themeContext';
 const User = () => {
 	const { width } = useWindowSize();
 	const { setAsideStatus } = useContext(ThemeContext);
-	const { userData, setUser } = useContext(AuthContext);
+	const { userData, setUser, gymUser, gymLogout } = useContext(AuthContext);
 
 	const navigate = useNavigate();
 	const handleItem = useNavigationItemHandle();
@@ -34,34 +34,16 @@ const User = () => {
 				role='presentation'
 				onClick={() => setCollapseStatus(!collapseStatus)}>
 				<div className='user-avatar'>
-					<img
-						srcSet={userData?.srcSet}
-						src={userData?.src}
-						alt='Avatar'
-						width={128}
-						height={128}
-					/>
+					<Icon icon='AdminPanelSettings' size='3x' color='primary' />
 				</div>
 				<div className='user-info'>
 					<div className='user-name d-flex align-items-center'>
-						{`${userData?.name} ${userData?.surname}`}
+						{`${gymUser?.fullName || userData?.fullName}`}
 						<Icon icon='Verified' className='ms-1' color='info' />
 					</div>
-					<div className='user-sub-title'>{userData?.position}</div>
 				</div>
 			</div>
 			<DropdownMenu>
-				<DropdownItem>
-					<Button
-						icon='AccountBox'
-						onClick={() =>
-							navigate(
-								`../${demoPagesMenu.appointment.subMenu.employeeID.path}/${userData?.id}`,
-							)
-						}>
-						Profile
-					</Button>
-				</DropdownItem>
 				<DropdownItem>
 					<Button
 						icon={darkModeStatus ? 'DarkMode' : 'LightMode'}
@@ -75,25 +57,6 @@ const User = () => {
 			<Collapse isOpen={collapseStatus} className='user-menu'>
 				<nav aria-label='aside-bottom-user-menu'>
 					<div className='navigation'>
-						<div
-							role='presentation'
-							className='navigation-item cursor-pointer'
-							onClick={() =>
-								navigate(
-									`../${demoPagesMenu.appointment.subMenu.employeeID.path}/${userData?.id}`,
-									// @ts-ignore
-									handleItem(),
-								)
-							}>
-							<span className='navigation-link navigation-link-pill'>
-								<span className='navigation-link-info'>
-									<Icon icon='AccountBox' className='navigation-icon' />
-									<span className='navigation-text'>
-										{t('menu:Profile') as ReactNode}
-									</span>
-								</span>
-							</span>
-						</div>
 						<div
 							role='presentation'
 							className='navigation-item cursor-pointer'
@@ -124,8 +87,11 @@ const User = () => {
 						<div
 							role='presentation'
 							className='navigation-item cursor-pointer'
-							onClick={() => {
-								if (setUser) {
+							onClick={async () => {
+								// Use gym logout if available, otherwise fallback to template logout
+								if (gymLogout) {
+									await gymLogout();
+								} else if (setUser) {
 									setUser('');
 								}
 								if (width < Number(import.meta.env.VITE_MOBILE_BREAKPOINT_SIZE)) {

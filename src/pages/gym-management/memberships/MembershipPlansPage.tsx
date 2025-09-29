@@ -7,7 +7,7 @@ import Icon from '../../../components/icon/Icon';
 import Button from '../../../components/bootstrap/Button';
 import Page from '../../../layout/Page/Page';
 import PageWrapper from '../../../layout/PageWrapper/PageWrapper';
-import Card, { CardBody } from '../../../components/bootstrap/Card';
+import Card, { CardBody, CardHeader } from '../../../components/bootstrap/Card';
 import Spinner from '../../../components/bootstrap/Spinner';
 import Alert from '../../../components/bootstrap/Alert';
 import { useMembershipPlans } from './hooks/useMembershipPlans';
@@ -34,37 +34,6 @@ const MembershipPlansPage = () => {
 		handleDeletePlan,
 	} = useMembershipPlans();
 
-	if (loading) {
-		return (
-			<PageWrapper title={t('Membership Plans')}>
-				<SubHeader>
-					<SubHeaderLeft>
-						<Breadcrumb
-							list={[
-								{ title: t('Dashboard'), to: '/gym-management' },
-								{ title: t('Memberships'), to: '/gym-management/memberships' },
-								{ title: t('Plans'), to: '/gym-management/memberships/plans' },
-							]}
-						/>
-					</SubHeaderLeft>
-				</SubHeader>
-				<Page container='fluid'>
-					<div
-						className='d-flex justify-content-center align-items-center'
-						style={{ minHeight: '60vh' }}>
-						<div className='text-center'>
-							<Spinner size='3rem' className='mb-3' />
-							<div className='h5'>{t('Loading membership plans...')}</div>
-							<div className='text-muted'>
-								{t('Please wait while we fetch your membership plans')}
-							</div>
-						</div>
-					</div>
-				</Page>
-			</PageWrapper>
-		);
-	}
-
 	return (
 		<PageWrapper title={t('Membership Plans')}>
 			<SubHeader>
@@ -84,28 +53,19 @@ const MembershipPlansPage = () => {
 				</SubHeaderRight>
 			</SubHeader>
 			<Page container='fluid'>
-				{/* Page Title */}
-				<PageTitle
-					title={t('Membership Plans')}
-					icon='CardMembership'
-					iconColor='primary'
-					subtitle={t(
-						'Create and manage membership plans, set pricing, and configure member benefits',
-					)}
-				/>
-
-				{alert && (
-					<Alert color={alert.type} isLight className='mb-4'>
-						<Icon
-							icon={alert.type === 'success' ? 'CheckCircle' : 'Error'}
-							className='me-2'
+				<Card>
+					<CardHeader borderSize={1}>
+						{/* Page Title */}
+						<PageTitle
+							title={t('Membership Plans')}
+							icon='CardMembership'
+							iconColor='primary'
+							subtitle={t(
+								'Create and manage membership plans, set pricing, and configure member benefits',
+							)}
 						/>
-						{alert.message}
-					</Alert>
-				)}
-
-				{/* Header Section */}
-				<MembershipPlansHeader />
+					</CardHeader>
+				</Card>
 
 				{/* Plans Grid */}
 				<Card stretch className='mt-4'>

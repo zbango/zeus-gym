@@ -124,17 +124,20 @@ export interface ISale {
 	customerName?: string;
 }
 
+// User interface for gym management system
 export interface IGymUser {
 	id: string;
 	username: string;
 	role: 'admin' | 'staff';
-	name: string;
+	fullName: string;
 	email: string;
+	phone?: string;
 	permissions: string[];
-	password: string;
-	isActive: boolean;
+	password?: string;
+	status: 'active' | 'inactive';
 	lastLogin?: string | null;
 	createdAt: string;
+	isActive: boolean;
 }
 
 export interface IGymSettings {
