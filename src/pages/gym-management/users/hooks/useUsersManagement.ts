@@ -1,4 +1,4 @@
-import { useState, useContext, useCallback } from 'react';
+import { useState, useContext, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { IGymUser } from '../../../../types/gym-types';
@@ -28,14 +28,30 @@ export const useUsersManagement = () => {
 	} = useGetUsersQuery({
 		page: currentPage,
 		pageSize: perPage,
-		search: searchTerm,
 	});
 
 	const [createUser, { isLoading: creatingUser }] = useCreateUserMutation();
 	const [updateUser, { isLoading: updatingUser }] = useUpdateUserMutation();
 
-	// Extract users from API response
-	const users = usersData?.users || [];
+	// Extract users from API response and filter locally
+	const allUsers = usersData?.users || [];
+	const filteredUsers = allUsers.filter((user) => {
+		if (!searchTerm) return true;
+		const searchLower = searchTerm.toLowerCase();
+		return (
+			user.fullName.toLowerCase().includes(searchLower) ||
+			user.username.toLowerCase().includes(searchLower) ||
+			user.email.toLowerCase().includes(searchLower) ||
+			(user as any).phone?.toLowerCase().includes(searchLower)
+		);
+	});
+
+	// Apply pagination to filtered results
+	const startIndex = (currentPage - 1) * perPage;
+	const endIndex = startIndex + perPage;
+	const users = filteredUsers.slice(startIndex, endIndex);
+	const totalPages = Math.ceil(filteredUsers.length / perPage);
+
 	const saving = creatingUser || updatingUser;
 
 	const handleAddUser = useCallback(() => {
@@ -65,7 +81,6 @@ export const useUsersManagement = () => {
 						email: values.email,
 						phone: values.phone,
 						role: values.role,
-						action: 'update',
 					}).unwrap();
 					toast.success(
 						t('User "{{name}}" has been updated successfully!', {
@@ -80,7 +95,6 @@ export const useUsersManagement = () => {
 						email: values.email,
 						phone: values.phone,
 						role: values.role,
-						action: 'create',
 					}).unwrap();
 					toast.success(
 						t('User "{{name}}" has been created successfully!', {
@@ -109,6 +123,8 @@ export const useUsersManagement = () => {
 
 	const handleSearchChange = useCallback((search: string) => {
 		setSearchTerm(search);
+		// Reset to first page when searching
+		setCurrentPage(1);
 	}, []);
 
 	const handlePageChange = useCallback((page: number) => {
@@ -126,6 +142,7 @@ export const useUsersManagement = () => {
 		users,
 		currentPage,
 		perPage,
+		totalPages,
 		showModal,
 		editingUser,
 		saving,
