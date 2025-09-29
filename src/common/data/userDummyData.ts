@@ -19,6 +19,7 @@ export interface IUserProps {
 	fullImage?: string;
 	services?: IServiceProps[];
 	password: string;
+	lastLogin?: string;
 }
 
 const john: IUserProps = {

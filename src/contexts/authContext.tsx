@@ -15,6 +15,7 @@ const mapGymUserToTemplateUser = (gymUser: IGymUser): Partial<IUserProps> => {
 		isOnline: true,
 		color: gymUser.role === 'admin' ? 'primary' : 'info',
 		password: gymUser.password,
+		lastLogin: gymUser.lastLogin || '',
 		// Use default images since gym users don't have specific avatars
 		src: '',
 		srcSet: '',

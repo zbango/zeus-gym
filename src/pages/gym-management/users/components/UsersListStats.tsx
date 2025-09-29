@@ -13,7 +13,7 @@ const UsersListStats: React.FC<UsersListStatsProps> = ({ users }) => {
 
 	const adminUsers = users.filter((u) => u.role === 'admin');
 	const staffUsers = users.filter((u) => u.role === 'staff');
-	const activeUsers = users.filter((u) => u.isActive);
+	const activeUsers = users.filter((u) => u.status === 'active');
 
 	const stats = [
 		{

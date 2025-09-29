@@ -1,11 +1,5 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
-import Card, {
-	CardBody,
-	CardHeader,
-	CardLabel,
-	CardTitle,
-} from '../../../../components/bootstrap/Card';
+import Card, { CardBody } from '../../../../components/bootstrap/Card';
 import DynamicTable from '../../../../components/table/DynamicTable';
 import { useUsersTableColumns } from '../../../../components/users/UsersTableConfig';
 import { IGymUser } from '../../../../types/gym-types';
@@ -33,8 +27,6 @@ const UsersListTable: React.FC<UsersListTableProps> = ({
 	currentUserId,
 	saving,
 }) => {
-	const { t } = useTranslation();
-
 	return (
 		<Card stretch>
 			<CardBody className='p-0'>

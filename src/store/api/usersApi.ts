@@ -10,7 +10,6 @@ export interface CreateUserRequest {
 	email: string;
 	phone: string;
 	role: 'admin' | 'staff';
-	action: 'create' | 'update';
 }
 
 export interface UpdateUserRequest extends CreateUserRequest {
@@ -83,31 +82,31 @@ export const usersApi = createApi({
 
 		// Update user
 		updateUser: builder.mutation<IGymUser, UpdateUserRequest>({
-			query: ({ id, ...updateData }) => ({
-				url: `admin/users/${id}`,
-				method: 'PUT',
+			query: ({ username, ...updateData }) => ({
+				url: `admin/users/${username}`,
+				method: 'PATCH',
 				body: updateData,
 			}),
-			invalidatesTags: (result, error, { id }) => [{ type: 'User', id }],
+			invalidatesTags: (result, error, { username }) => [{ type: 'User', username }],
 		}),
 
 		// Delete user
 		deleteUser: builder.mutation<void, string>({
-			query: (id) => ({
-				url: `admin/users/${id}`,
+			query: (username) => ({
+				url: `admin/users/${username}`,
 				method: 'DELETE',
 			}),
 			invalidatesTags: ['User'],
 		}),
 
 		// Toggle user status
-		toggleUserStatus: builder.mutation<IGymUser, { id: string; isActive: boolean }>({
-			query: ({ id, isActive }) => ({
-				url: `admin/users/${id}/status`,
+		toggleUserStatus: builder.mutation<IGymUser, { username: string; status: string }>({
+			query: ({ username, status }) => ({
+				url: `admin/users/${username}`,
 				method: 'PATCH',
-				body: { isActive },
+				body: { status },
 			}),
-			invalidatesTags: (result, error, { id }) => [{ type: 'User', id }],
+			invalidatesTags: (result, error, { username }) => [{ type: 'User', username }],
 		}),
 
 		// Get user statistics

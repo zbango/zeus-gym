@@ -54,9 +54,12 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
 				errors.email = t('Invalid email address');
 			}
 
-			// Phone validation (basic)
-			if (values.phone && !/^[\d\s\-\+\(\)]+$/.test(values.phone)) {
-				errors.phone = t('Invalid phone number');
+			// Phone validation - only numbers, exactly 10 digits
+			if (values.phone) {
+				const phoneDigits = values.phone.replace(/\D/g, ''); // Remove all non-digits
+				if (phoneDigits.length !== 10) {
+					errors.phone = t('Phone number must be exactly 10 digits');
+				}
 			}
 
 			return errors;
@@ -66,7 +69,6 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
 				// Add action property to payload
 				const payload = {
 					...values,
-					action: editingUser ? 'update' : 'create',
 				};
 				await onSubmit(payload);
 				resetForm();
@@ -80,11 +82,17 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
 	// Update form values when editing user changes
 	React.useEffect(() => {
 		if (editingUser) {
+			// Remove country code (+593) from phone number for display
+			let displayPhone = (editingUser as any).phone || '';
+			if (displayPhone.startsWith('+593')) {
+				displayPhone = `0${displayPhone.substring(4)}`; // Remove +593 and add 0
+			}
+
 			formik.setValues({
 				name: editingUser.fullName,
 				username: editingUser.username,
 				email: editingUser.email,
-				phone: (editingUser as any).phone || '',
+				phone: displayPhone,
 				role: editingUser.role,
 			});
 		} else {
@@ -122,6 +130,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
 									onChange={formik.handleChange}
 									onBlur={formik.handleBlur}
 									value={formik.values.username}
+									disabled={!!editingUser}
 									isValid={formik.touched.username && !formik.errors.username}
 									isTouched={formik.touched.username && !!formik.errors.username}
 									invalidFeedback={formik.errors.username}

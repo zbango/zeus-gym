@@ -5,6 +5,7 @@ import PageWrapper from '../../layout/PageWrapper/PageWrapper';
 import Spinner from '../bootstrap/Spinner';
 import Alert from '../bootstrap/Alert';
 import Icon from '../icon/Icon';
+import { useTranslation } from 'react-i18next';
 
 interface IProtectedRouteProps {
 	children: React.ReactNode;
@@ -21,6 +22,7 @@ const ProtectedRoute: React.FC<IProtectedRouteProps> = ({
 		useContext(AuthContext);
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { t } = useTranslation();
 
 	// Debug any navigation that happens
 	const originalNavigate = navigate;
@@ -61,8 +63,8 @@ const ProtectedRoute: React.FC<IProtectedRouteProps> = ({
 					style={{ minHeight: '60vh' }}>
 					<div className='text-center'>
 						<Spinner size='3rem' className='mb-3' />
-						<div className='h5'>Checking authentication...</div>
-						<div className='text-muted'>Please wait</div>
+						<div className='h5'>{t('Checking authentication...')}</div>
+						<div className='text-muted'>{t('Please wait')}</div>
 					</div>
 				</div>
 			</PageWrapper>

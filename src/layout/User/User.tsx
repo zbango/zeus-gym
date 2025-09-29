@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import classNames from 'classnames';
 import { useWindowSize } from 'react-use';
-import { demoPagesMenu } from '../../menu';
 import { DropdownItem, DropdownMenu } from '../../components/bootstrap/Dropdown';
 import Button from '../../components/bootstrap/Button';
 import useDarkMode from '../../hooks/useDarkMode';
@@ -24,6 +23,7 @@ const User = () => {
 	const { darkModeStatus, setDarkModeStatus } = useDarkMode();
 
 	const [collapseStatus, setCollapseStatus] = useState<boolean>(false);
+	const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
 
 	const { t } = useTranslation(['translation', 'menu']);
 
@@ -88,22 +88,37 @@ const User = () => {
 							role='presentation'
 							className='navigation-item cursor-pointer'
 							onClick={async () => {
-								// Use gym logout if available, otherwise fallback to template logout
-								if (gymLogout) {
-									await gymLogout();
-								} else if (setUser) {
-									setUser('');
+								if (isLoggingOut) return; // Prevent multiple clicks
+
+								setIsLoggingOut(true);
+								try {
+									// Use gym logout if available, otherwise fallback to template logout
+									if (gymLogout) {
+										await gymLogout();
+									} else if (setUser) {
+										setUser('');
+									}
+									if (
+										width < Number(import.meta.env.VITE_MOBILE_BREAKPOINT_SIZE)
+									) {
+										setAsideStatus(false);
+									}
+									navigate(`../auth-pages/login`);
+								} catch (error) {
+									console.error('Logout error:', error);
+									setIsLoggingOut(false);
 								}
-								if (width < Number(import.meta.env.VITE_MOBILE_BREAKPOINT_SIZE)) {
-									setAsideStatus(false);
-								}
-								navigate(`../auth-pages/login`);
 							}}>
 							<span className='navigation-link navigation-link-pill'>
 								<span className='navigation-link-info'>
-									<Icon icon='Logout' className='navigation-icon' />
+									<Icon
+										icon={isLoggingOut ? 'Refresh' : 'Logout'}
+										className={`navigation-icon ${isLoggingOut ? 'fa-spin' : ''}`}
+									/>
 									<span className='navigation-text'>
-										{t('menu:Logout') as ReactNode}
+										{isLoggingOut
+											? t('Logging out...')
+											: (t('menu:Logout') as ReactNode)}
 									</span>
 								</span>
 							</span>

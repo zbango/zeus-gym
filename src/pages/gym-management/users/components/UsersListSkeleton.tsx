@@ -1,14 +1,16 @@
 import React from 'react';
 import Card, { CardBody, CardHeader } from '../../../../components/bootstrap/Card';
 import Spinner from '../../../../components/bootstrap/Spinner';
+import { useTranslation } from 'react-i18next';
 
 const UsersListSkeleton: React.FC = () => {
+	const { t } = useTranslation();
 	return (
 		<Card stretch>
 			<CardHeader borderSize={1}>
 				<div className='d-flex align-items-center'>
 					<Spinner isGrow size='sm' className='me-2' />
-					<span>Loading users...</span>
+					<span>{t('Loading users...')}</span>
 				</div>
 			</CardHeader>
 			<CardBody>

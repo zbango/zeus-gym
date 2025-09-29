@@ -3,8 +3,8 @@ import { TableColumn } from '../../types/member.types';
 import { IGymUser } from '../../types/gym-types';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+
 import { toast } from 'react-toastify';
-import Avatar from '../Avatar';
 import Button from '../bootstrap/Button';
 import Dropdown, { DropdownItem, DropdownMenu, DropdownToggle } from '../bootstrap/Dropdown';
 import Icon from '../icon/Icon';
@@ -24,10 +24,10 @@ export const useUsersTableColumns = (
 
 	const handleDeleteUser = async (user: IGymUser) => {
 		try {
-			await deleteUser(user.id).unwrap();
+			await deleteUser(user.username).unwrap();
 			toast.success(
 				t('User "{{name}}" has been deleted successfully!', {
-					name: user.name,
+					name: user.fullName,
 				}),
 			);
 		} catch (error) {
@@ -39,8 +39,8 @@ export const useUsersTableColumns = (
 	const handleToggleUserStatus = async (user: IGymUser) => {
 		try {
 			await toggleUserStatus({
-				id: user.id,
-				isActive: user.status === 'active',
+				username: user.username,
+				status: user.status === 'active' ? 'inactive' : 'active',
 			}).unwrap();
 			toast.success(t('User status updated successfully!'));
 		} catch (error) {
@@ -57,13 +57,8 @@ export const useUsersTableColumns = (
 			sortable: true,
 			render: (_, record) => (
 				<div className='d-flex align-items-center'>
-					<Avatar
-						src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${record.username}`}
-						size={40}
-						className='me-3'
-					/>
 					<div>
-						<div className='fw-bold'>{record.name}</div>
+						<div className='fw-bold'>{record.fullName}</div>
 						<div className='small text-muted'>
 							@{record.username} • {record.email}
 						</div>
@@ -124,6 +119,8 @@ export const useUsersTableColumns = (
 			render: (_, record) => (
 				<div className='text-muted small'>
 					{dayjs(record.createdAt).format('DD/MM/YYYY')}
+					<br />
+					{dayjs(record.createdAt).format('HH:mm')}
 				</div>
 			),
 		},
@@ -146,19 +143,18 @@ export const useUsersTableColumns = (
 						/>
 					</DropdownToggle>
 					<DropdownMenu>
-						{hasPermission?.('users.edit') && (
-							<DropdownItem
-								onClick={(e: React.MouseEvent) => {
-									e.stopPropagation();
-									onEditUser?.(record);
-								}}>
-								<div>
-									<Icon icon='Edit' className='me-2' />
-									{t('Edit User')}
-								</div>
-							</DropdownItem>
-						)}
-						{hasPermission?.('users.edit') && record.id !== currentUserId && (
+						<DropdownItem
+							onClick={(e: React.MouseEvent) => {
+								e.stopPropagation();
+								onEditUser?.(record);
+							}}>
+							<div>
+								<Icon icon='Edit' className='me-2' />
+								{t('Edit User')}
+							</div>
+						</DropdownItem>
+
+						{record.id !== currentUserId && (
 							<DropdownItem
 								onClick={(e: React.MouseEvent) => {
 									e.stopPropagation();
@@ -179,7 +175,7 @@ export const useUsersTableColumns = (
 							</DropdownItem>
 						)}
 						<DropdownItem isDivider />
-						{hasPermission?.('users.delete') && record.id !== currentUserId && (
+						{record.id !== currentUserId && (
 							<DropdownItem
 								onClick={(e: React.MouseEvent) => {
 									e.stopPropagation();
@@ -187,7 +183,7 @@ export const useUsersTableColumns = (
 									if (
 										confirm(
 											t('Are you sure you want to delete user "{{name}}"?', {
-												name: record.name,
+												name: record.fullName,
 											}),
 										)
 									) {
