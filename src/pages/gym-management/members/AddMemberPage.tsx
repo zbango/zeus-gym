@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
@@ -21,22 +21,103 @@ import Textarea from '../../../components/bootstrap/forms/Textarea';
 import Select from '../../../components/bootstrap/forms/Select';
 import Option from '../../../components/bootstrap/Option';
 import Spinner from '../../../components/bootstrap/Spinner';
-import {
-	useGetMemberByIdQuery,
-	useCreateMemberMutation,
-	useUpdateMemberMutation,
-} from '../../../store/api/membersApi';
+import { useCreateMemberMutation, useUpdateMemberMutation } from '../../../store/api/membersApi';
+import { useGetMembershipPlansQuery } from '../../../store/api/membershipPlansApi';
 import { CreateMemberRequest, UpdateMemberRequest } from '../../../types/member.types';
-import { mockMembershipPlans } from '../../../common/data/gymMockData';
+import { extractErrorMessage } from '../../../helpers/errorUtils';
 import MemberSuccessDialog from './components/MemberSuccessDialog';
+
+// Plan Summary Component
+interface PlanSummaryProps {
+	selectedPlanId: string;
+	initialPaymentAmount: string;
+	startDate: string;
+	isEditMode: boolean;
+	membershipPlansData: any;
+}
+
+const PlanSummary = ({
+	selectedPlanId,
+	initialPaymentAmount,
+	startDate,
+	isEditMode,
+	membershipPlansData,
+}: PlanSummaryProps) => {
+	const { t } = useTranslation();
+
+	const selectedPlan = membershipPlansData?.plans?.find(
+		(plan: any) => plan.id === selectedPlanId,
+	);
+
+	if (!selectedPlan) return null;
+
+	const initialPayment = parseFloat(initialPaymentAmount) || 0;
+	const hasInitialPayment = !isEditMode && initialPayment > 0;
+	const difference = selectedPlan.price - initialPayment;
+
+	return (
+		<div>
+			<strong>{selectedPlan.name}</strong>
+			<small>
+				<br />
+				<strong>{t('Plan Price')}:</strong> ${selectedPlan.price.toLocaleString()}
+				{hasInitialPayment && (
+					<>
+						<br />
+						<strong>{t('Initial Payment')}:</strong> ${initialPayment.toLocaleString()}
+						<br />
+						<strong>
+							<span
+								className={
+									difference > 0
+										? 'text-danger'
+										: difference < 0
+											? 'text-success'
+											: 'text-muted'
+								}>
+								{difference > 0
+									? t('Remaining: ${{amount}}', {
+											amount: difference.toLocaleString(),
+										})
+									: difference < 0
+										? t('Overpaid: ${{amount}}', {
+												amount: Math.abs(difference).toLocaleString(),
+											})
+										: t('Fully Paid')}
+							</span>
+						</strong>
+					</>
+				)}
+				<br />
+				<strong>{t('Type')}:</strong>{' '}
+				{selectedPlan.type === 'monthly'
+					? t('Monthly ({{duration}} month(s))', { duration: selectedPlan.duration })
+					: t('Count-based ({{count}} visits)', { count: selectedPlan.visitCount })}
+				{selectedPlan.type === 'monthly' && (
+					<>
+						<br />
+						<strong>{t('Expires')}:</strong>{' '}
+						{dayjs(startDate)
+							.add(selectedPlan.duration || 1, 'month')
+							.format('DD/MM/YYYY')}
+					</>
+				)}
+			</small>
+		</div>
+	);
+};
 
 const AddMemberPage = () => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const { id } = useParams<{ id?: string }>();
 
 	const isEditMode = Boolean(id);
 	const pageTitle = isEditMode ? t('Edit Member') : t('Add New Member');
+
+	// Get member data from navigation state (for edit mode)
+	const memberData = location.state?.memberData;
 
 	// Function to calculate age from birth date
 	const calculateAge = (birthDate: string): string => {
@@ -90,9 +171,16 @@ const AddMemberPage = () => {
 	};
 
 	// RTK Query hooks
-	const { data: memberData, isLoading: loadingMember } = useGetMemberByIdQuery(id!, {
-		skip: !isEditMode || !id,
+	const {
+		data: membershipPlansData,
+		isLoading: loadingPlans,
+		error: plansError,
+	} = useGetMembershipPlansQuery({
+		page: 1,
+		pageSize: 100,
+		status: 'active',
 	});
+
 	const [createMember, { isLoading: isCreating }] = useCreateMemberMutation();
 	const [updateMember, { isLoading: isUpdating }] = useUpdateMemberMutation();
 
@@ -112,31 +200,33 @@ const AddMemberPage = () => {
 	const resetForm = () => {
 		setInitialValues({
 			// Personal Information
-			firstName: '',
+			name: '',
 			lastName: '',
 			email: '',
 			phone: '',
 			address: '',
-			birthDate: '',
+			dateOfBirth: '',
 			identification: '',
+			medicalConditions: '',
 
 			// Health Information
 			age: '',
-			gender: '',
+			gender: 'male',
 			height: '',
-			currentWeight: '',
+			weight: '',
 			chest: '',
 			waist: '',
-			hips: '',
+			hip: '',
 			arms: '',
 			thighs: '',
-			medicalConditions: '',
 
 			// Membership Information
-			membershipPlan: '',
-			membershipType: 'monthly' as 'monthly' | 'count-based',
+			membershipPlanId: '',
 			startDate: dayjs().format('YYYY-MM-DD'),
-			paymentAmount: '',
+
+			// Payment Information
+			initialPaymentAmount: '',
+			paymentMethod: 'cash' as 'cash' | 'transfer',
 		});
 		setBmi(0);
 		setBmiCategory(null);
@@ -153,58 +243,60 @@ const AddMemberPage = () => {
 
 	const [initialValues, setInitialValues] = useState({
 		// Personal Information
-		firstName: '',
+		name: '',
 		lastName: '',
 		email: '',
 		phone: '',
 		address: '',
-		birthDate: '',
+		dateOfBirth: '',
 		identification: '',
+		medicalConditions: '',
 
 		// Health Information
 		age: '',
-		gender: '',
+		gender: 'male',
 		height: '',
-		currentWeight: '',
+		weight: '',
 		chest: '',
 		waist: '',
-		hips: '',
+		hip: '',
 		arms: '',
 		thighs: '',
-		medicalConditions: '',
 
 		// Membership Information
-		membershipPlan: '',
-		membershipType: 'monthly' as 'monthly' | 'count-based',
+		membershipPlanId: '',
 		startDate: dayjs().format('YYYY-MM-DD'),
-		paymentAmount: '',
+
+		// Payment Information
+		initialPaymentAmount: '',
+		paymentMethod: 'cash' as 'cash' | 'transfer',
 	});
 
-	// Load member data for editing
+	// Load member data for editing from navigation state
 	useEffect(() => {
 		if (isEditMode && memberData) {
 			setInitialValues({
-				firstName: memberData.personalInfo.firstName,
-				lastName: memberData.personalInfo.lastName,
-				email: memberData.personalInfo.email,
-				phone: memberData.personalInfo.phone,
-				address: memberData.personalInfo.address,
-				birthDate: memberData.personalInfo.birthDate || '',
-				identification: memberData.personalInfo.identification || '',
-				age: memberData.healthInfo.age.toString(),
-				gender: memberData.healthInfo.gender || '',
-				height: memberData.healthInfo.height.toString(),
-				currentWeight: memberData.healthInfo.currentWeight.toString(),
-				chest: memberData.healthInfo.chest?.toString() || '',
-				waist: memberData.healthInfo.waist?.toString() || '',
-				hips: memberData.healthInfo.hips?.toString() || '',
-				arms: memberData.healthInfo.arms?.toString() || '',
-				thighs: memberData.healthInfo.thighs?.toString() || '',
-				medicalConditions: memberData.healthInfo.medicalConditions || '',
-				membershipPlan: memberData.membershipInfo.plan,
-				membershipType: memberData.membershipInfo.type,
-				startDate: memberData.membershipInfo.startDate,
-				paymentAmount: '',
+				name: memberData.personalInfo?.firstName || '',
+				lastName: memberData.personalInfo?.lastName || '',
+				email: memberData.personalInfo?.email || '',
+				phone: memberData.personalInfo?.phone || '',
+				address: memberData.personalInfo?.address || '',
+				dateOfBirth: memberData.personalInfo?.birthDate || '',
+				identification: memberData.personalInfo?.identification || '',
+				medicalConditions: memberData.healthInfo?.medicalConditions || '',
+				age: memberData.healthInfo?.age?.toString() || '',
+				gender: memberData.healthInfo?.gender || '',
+				height: memberData.healthInfo?.height?.toString() || '',
+				weight: memberData.healthInfo?.currentWeight?.toString() || '',
+				chest: memberData.healthInfo?.chest?.toString() || '',
+				waist: memberData.healthInfo?.waist?.toString() || '',
+				hip: memberData.healthInfo?.hips?.toString() || '',
+				arms: memberData.healthInfo?.arms?.toString() || '',
+				thighs: memberData.healthInfo?.thighs?.toString() || '',
+				membershipPlanId: '', // Not needed for edit mode
+				startDate: memberData.membershipInfo?.startDate || dayjs().format('YYYY-MM-DD'),
+				initialPaymentAmount: '',
+				paymentMethod: 'cash' as 'cash' | 'transfer',
 			});
 		}
 	}, [isEditMode, memberData]);
@@ -216,31 +308,18 @@ const AddMemberPage = () => {
 			const errors: any = {};
 
 			// Required fields
-			if (!values.firstName) errors.firstName = t('First name is required');
+			if (!values.name) errors.name = t('Name is required');
 			if (!values.lastName) errors.lastName = t('Last name is required');
-			if (!values.email) errors.email = t('Email is required');
-			if (!values.phone) errors.phone = t('Phone is required');
+			if (!values.dateOfBirth) errors.dateOfBirth = t('Date of birth is required');
 			if (!values.identification) errors.identification = t('Identification is required');
 			if (!values.gender) errors.gender = t('Gender is required');
-			if (!values.height) errors.height = t('Height is required');
-			if (!values.currentWeight) errors.currentWeight = t('Weight is required');
-			// Membership plan is only required for new members
-			if (!isEditMode && !values.membershipPlan)
-				errors.membershipPlan = t('Membership plan is required');
 
-			// Payment amount validation (only for new members)
-			if (
-				!isEditMode &&
-				(!values.paymentAmount || values.paymentAmount.toString().trim() === '')
-			) {
-				errors.paymentAmount = t('Payment amount is required');
-			}
-			if (
-				values.paymentAmount &&
-				values.paymentAmount.toString().trim() !== '' &&
-				parseFloat(values.paymentAmount.toString()) <= 0
-			) {
-				errors.paymentAmount = t('Payment amount must be greater than 0');
+			// Membership and payment fields (only required for new members)
+			if (!isEditMode) {
+				if (!values.membershipPlanId)
+					errors.membershipPlanId = t('Membership plan is required');
+				if (!values.startDate) errors.startDate = t('Start date is required');
+				if (!values.paymentMethod) errors.paymentMethod = t('Payment method is required');
 			}
 
 			// Email validation
@@ -248,106 +327,104 @@ const AddMemberPage = () => {
 				errors.email = t('Invalid email address');
 			}
 
-			// Height validation
-			if (values.height && (parseInt(values.height) < 140 || parseInt(values.height) > 220)) {
-				errors.height = t('Height must be between 140cm and 220cm');
+			// Phone validation (optional but if provided, must be 10 digits)
+			if (values.phone) {
+				const phoneDigits = values.phone.replace(/\D/g, ''); // Remove all non-digits
+				if (phoneDigits.length !== 10) {
+					errors.phone = t('Phone number must be exactly 10 digits');
+				}
 			}
 
-			// Weight validation
-			if (
-				values.currentWeight &&
-				(parseInt(values.currentWeight) < 40 || parseInt(values.currentWeight) > 200)
-			) {
-				errors.currentWeight = t('Weight must be between 40kg and 200kg');
+			// // Height validation
+			// if (values.height && (parseInt(values.height) < 140 || parseInt(values.height) > 220)) {
+			// 	errors.height = t('Height must be between 140cm and 220cm');
+			// }
+
+			// // Weight validation
+			// if (values.weight && (parseInt(values.weight) < 40 || parseInt(values.weight) > 200)) {
+			// 	errors.weight = t('Weight must be between 40kg and 200kg');
+			// }
+
+			// Amount validations
+			if (values.initialPaymentAmount && parseFloat(values.initialPaymentAmount) <= 0) {
+				errors.initialPaymentAmount = t('Initial payment amount must be greater than 0');
 			}
 
 			return errors;
 		},
 		onSubmit: async (values) => {
 			try {
-				console.log(values);
-
-				// For new members, validate and get membership plan
-				let membershipInfo: any = undefined;
-				if (!isEditMode) {
-					const selectedPlan = mockMembershipPlans.find(
-						(plan) => plan.id === values.membershipPlan,
-					);
-
-					if (!selectedPlan) {
-						throw new Error('Invalid membership plan selected');
-					}
-
-					membershipInfo = {
-						type: selectedPlan.type,
-						plan: selectedPlan.name,
-						startDate: values.startDate,
-						endDate:
-							selectedPlan.type === 'monthly'
-								? dayjs(values.startDate)
-										.add(selectedPlan.duration || 1, 'month')
-										.format('YYYY-MM-DD')
-								: undefined,
-						remainingVisits:
-							selectedPlan.type === 'count-based'
-								? selectedPlan.visitCount
-								: undefined,
-						status: 'active' as const,
-					};
-				}
-
-				const memberData: any = {
-					personalInfo: {
-						firstName: values.firstName,
-						lastName: values.lastName,
-						email: values.email,
-						phone: values.phone,
-						address: values.address,
-						birthDate: values.birthDate,
-						identification: values.identification,
-					},
-					healthInfo: {
-						age: parseInt(values.age) || parseInt(calculateAge(values.birthDate)) || 0,
-						gender: values.gender,
-						height: parseInt(values.height),
-						currentWeight: parseInt(values.currentWeight),
-						chest: values.chest ? parseInt(values.chest) : undefined,
-						waist: values.waist ? parseInt(values.waist) : undefined,
-						hips: values.hips ? parseInt(values.hips) : undefined,
-						arms: values.arms ? parseInt(values.arms) : undefined,
-						thighs: values.thighs ? parseInt(values.thighs) : undefined,
-						medicalConditions: values.medicalConditions || 'Ninguna',
-					},
-				};
-
-				// Only add membership info for new members
-				if (membershipInfo) {
-					memberData.membershipInfo = membershipInfo;
-				}
-
 				if (isEditMode && id) {
 					// Update existing member
 					const updateData: UpdateMemberRequest = {
 						id,
-						...memberData,
+						name: values.name,
+						lastName: values.lastName,
+						dateOfBirth: values.dateOfBirth,
+						email: values.email,
+						phone: values.phone,
+						address: values.address,
+						identification: values.identification,
+						medicalConditions: values.medicalConditions,
 					};
 
 					await updateMember(updateData).unwrap();
 
 					toast.success(
 						t('Member {{name}} has been successfully updated!', {
-							name: `${values.firstName} ${values.lastName}`,
+							name: `${values.name} ${values.lastName}`,
 						}),
 					);
 				} else {
+					// Get selected membership plan to use its price as totalAmount
+					const selectedPlan = membershipPlansData?.plans?.find(
+						(plan) => plan.id === values.membershipPlanId,
+					);
+
+					if (!selectedPlan) {
+						toast.error(t('Please select a valid membership plan'));
+						return;
+					}
+
 					// Create new member
-					const createData: CreateMemberRequest = memberData;
-					console.log(createData);
+					const createData: CreateMemberRequest = {
+						// Personal Information
+						name: values.name,
+						lastName: values.lastName,
+						dateOfBirth: values.dateOfBirth,
+						email: values.email,
+						phone: values.phone,
+						address: values.address,
+						identification: values.identification,
+						medicalConditions: values.medicalConditions,
+
+						// Progress Information
+						age:
+							parseInt(values.age) || parseInt(calculateAge(values.dateOfBirth)) || 0,
+						gender: values.gender as 'male' | 'female',
+						height: parseInt(values.height || '0'),
+						weight: parseInt(values.weight || '0'),
+						chest: values.chest ? parseInt(values.chest) : undefined,
+						waist: values.waist ? parseInt(values.waist) : undefined,
+						hip: values.hip ? parseInt(values.hip) : undefined,
+						arms: values.arms ? parseInt(values.arms) : undefined,
+						thighs: values.thighs ? parseInt(values.thighs) : undefined,
+
+						// Membership Information
+						membershipPlanId: values.membershipPlanId,
+						startDate: values.startDate,
+						totalAmount: selectedPlan.price,
+
+						// Payment Information
+						initialPaymentAmount: parseFloat(values.initialPaymentAmount || '0'),
+						paymentMethod: values.paymentMethod,
+					};
+
 					const result = await createMember(createData).unwrap();
 
 					toast.success(
 						t('Member {{name}} has been successfully registered!', {
-							name: `${values.firstName} ${values.lastName}`,
+							name: `${values.name} ${values.lastName}`,
 						}),
 					);
 
@@ -359,25 +436,33 @@ const AddMemberPage = () => {
 
 				// For edit mode, navigate directly
 				navigate('/gym-management/members/list');
-			} catch (error) {
-				toast.error(t('An error occurred while saving the member. Please try again.'));
+			} catch (error: any) {
+				console.error('Error saving member:', error);
+
+				// Extract error message from API response with fallback
+				const errorMessage = extractErrorMessage(
+					error,
+					t('An error occurred while saving the member. Please try again.'),
+				);
+
+				toast.error(errorMessage);
 			}
 		},
 	});
 
 	// Auto-calculate age when birth date changes
 	useEffect(() => {
-		if (formik.values.birthDate) {
-			const calculatedAge = calculateAge(formik.values.birthDate);
+		if (formik.values.dateOfBirth) {
+			const calculatedAge = calculateAge(formik.values.dateOfBirth);
 			if (calculatedAge !== formik.values.age) {
 				formik.setFieldValue('age', calculatedAge);
 			}
 		}
-	}, [formik.values.birthDate]);
+	}, [formik.values.dateOfBirth]);
 
 	// Auto-calculate BMI when height or weight changes
 	useEffect(() => {
-		const weight = parseInt(formik.values.currentWeight) || 0;
+		const weight = parseInt(formik.values.weight) || 0;
 		const height = parseInt(formik.values.height) || 0;
 
 		if (weight > 0 && height > 0) {
@@ -388,22 +473,9 @@ const AddMemberPage = () => {
 			setBmi(0);
 			setBmiCategory(null);
 		}
-	}, [formik.values.currentWeight, formik.values.height]);
+	}, [formik.values.weight, formik.values.height]);
 
-	if (loadingMember) {
-		return (
-			<PageWrapper title={pageTitle}>
-				<div
-					className='d-flex justify-content-center align-items-center'
-					style={{ minHeight: '60vh' }}>
-					<div className='text-center'>
-						<Spinner size='3rem' className='mb-3' />
-						<div className='h5'>{t('Loading member data...')}</div>
-					</div>
-				</div>
-			</PageWrapper>
-		);
-	}
+	// No loading state needed since we're not fetching member data
 
 	return (
 		<PageWrapper title={pageTitle}>
@@ -427,14 +499,7 @@ const AddMemberPage = () => {
 				</SubHeaderRight>
 			</SubHeader>
 			<Page container='fluid'>
-				<form
-					onSubmit={(e) => {
-						console.log('Form submit event triggered');
-						console.log('Event:', e);
-						console.log('formik.handleSubmit:', formik.handleSubmit);
-						e.preventDefault(); // Prevent default form submission
-						formik.handleSubmit(e);
-					}}>
+				<form onSubmit={formik.handleSubmit}>
 					<div className='row g-4'>
 						{/* Personal Information */}
 						<div className='col-lg-6'>
@@ -447,18 +512,17 @@ const AddMemberPage = () => {
 								<CardBody>
 									<div className='row g-3'>
 										<div className='col-md-6'>
-											<FormGroup id='firstName' label={t('First Name')}>
+											<FormGroup id='name' label={t('Name')}>
 												<Input
-													name='firstName'
+													name='name'
 													onChange={formik.handleChange}
 													onBlur={formik.handleBlur}
-													value={formik.values.firstName}
+													value={formik.values.name}
 													isValid={formik.isValid}
 													isTouched={
-														formik.touched.firstName &&
-														!!formik.errors.firstName
+														formik.touched.name && !!formik.errors.name
 													}
-													invalidFeedback={formik.errors.firstName}
+													invalidFeedback={formik.errors.name}
 												/>
 											</FormGroup>
 										</div>
@@ -503,7 +567,6 @@ const AddMemberPage = () => {
 													onChange={formik.handleChange}
 													onBlur={formik.handleBlur}
 													value={formik.values.phone}
-													placeholder='+593 999 123 456'
 													isValid={formik.isValid}
 													isTouched={
 														formik.touched.phone &&
@@ -514,19 +577,19 @@ const AddMemberPage = () => {
 											</FormGroup>
 										</div>
 										<div className='col-md-6'>
-											<FormGroup id='birthDate' label={t('Birth Date')}>
+											<FormGroup id='dateOfBirth' label={t('Date of Birth')}>
 												<Input
 													type='date'
-													name='birthDate'
+													name='dateOfBirth'
 													onChange={formik.handleChange}
 													onBlur={formik.handleBlur}
-													value={formik.values.birthDate}
+													value={formik.values.dateOfBirth}
 													isValid={formik.isValid}
 													isTouched={
-														formik.touched.birthDate &&
-														!!formik.errors.birthDate
+														formik.touched.dateOfBirth &&
+														!!formik.errors.dateOfBirth
 													}
-													invalidFeedback={formik.errors.birthDate}
+													invalidFeedback={formik.errors.dateOfBirth}
 												/>
 											</FormGroup>
 										</div>
@@ -627,21 +690,21 @@ const AddMemberPage = () => {
 											</FormGroup>
 										</div>
 										<div className='col-md-4'>
-											<FormGroup id='currentWeight' label={t('Weight (kg)')}>
+											<FormGroup id='weight' label={t('Weight (kg)')}>
 												<Input
 													type='number'
-													name='currentWeight'
+													name='weight'
 													onChange={formik.handleChange}
 													onBlur={formik.handleBlur}
-													value={formik.values.currentWeight}
+													value={formik.values.weight}
 													min={40}
 													max={200}
 													isValid={formik.isValid}
 													isTouched={
-														formik.touched.currentWeight &&
-														!!formik.errors.currentWeight
+														formik.touched.weight &&
+														!!formik.errors.weight
 													}
-													invalidFeedback={formik.errors.currentWeight}
+													invalidFeedback={formik.errors.weight}
 												/>
 											</FormGroup>
 										</div>
@@ -674,16 +737,16 @@ const AddMemberPage = () => {
 											</FormGroup>
 										</div>
 										<div className='col-md-4'>
-											<FormGroup id='hips' label={t('Hips (cm)')}>
+											<FormGroup id='hip' label={t('Hips (cm)')}>
 												<Input
 													type='number'
-													name='hips'
+													name='hip'
 													onChange={formik.handleChange}
 													onBlur={formik.handleBlur}
-													value={formik.values.hips}
+													value={formik.values.hip}
 													min={60}
 													max={150}
-													placeholder={t('Hips measurement')}
+													placeholder={t('Hip measurement')}
 												/>
 											</FormGroup>
 										</div>
@@ -779,28 +842,34 @@ const AddMemberPage = () => {
 										<div className='row g-3'>
 											<div className='col-12'>
 												<FormGroup
-													id='membershipPlan'
+													id='membershipPlanId'
 													label={t('Membership Plan')}>
 													<Select
-														name='membershipPlan'
+														name='membershipPlanId'
 														onChange={formik.handleChange}
 														onBlur={formik.handleBlur}
-														value={formik.values.membershipPlan}
+														value={formik.values.membershipPlanId}
 														ariaLabel={t('Select membership plan')}
 														isValid={formik.isValid}
 														isTouched={
-															formik.touched.membershipPlan &&
-															!!formik.errors.membershipPlan
+															formik.touched.membershipPlanId &&
+															!!formik.errors.membershipPlanId
 														}
 														invalidFeedback={
-															formik.errors.membershipPlan
+															formik.errors.membershipPlanId
 														}>
 														<Option value=''>
-															{t('Select a membership plan')}
+															{loadingPlans
+																? t('Loading plans...')
+																: plansError
+																	? t('Error loading plans')
+																	: t('Select a membership plan')}
 														</Option>
-														{mockMembershipPlans
-															.filter((plan) => plan.isActive)
-															.map((plan) => (
+														{membershipPlansData?.plans
+															?.filter(
+																(plan) => plan.status === 'active',
+															)
+															.map((plan: any) => (
 																<Option
 																	key={plan.id}
 																	value={plan.id}>
@@ -836,159 +905,75 @@ const AddMemberPage = () => {
 													/>
 												</FormGroup>
 											</div>
-											{/* Payment Amount - Only show for new members */}
-											{!isEditMode && (
-												<div className='col-12'>
-													<FormGroup
-														id='paymentAmount'
-														label={t('Payment Amount (USD)')}>
-														<Input
-															type='number'
-															name='paymentAmount'
-															onChange={formik.handleChange}
-															onBlur={formik.handleBlur}
-															value={formik.values.paymentAmount}
-															placeholder={t('Enter payment amount')}
-															min={0}
-															step={0.01}
-															isValid={formik.isValid}
-															isTouched={
-																formik.touched.paymentAmount &&
-																!!formik.errors.paymentAmount
-															}
-															invalidFeedback={
-																formik.errors.paymentAmount
-															}
-														/>
-													</FormGroup>
-												</div>
-											)}
-											{formik.values.membershipPlan && (
+											{/* Initial Payment Amount */}
+											<div className='col-md-6'>
+												<FormGroup
+													id='initialPaymentAmount'
+													label={t('Initial Payment Amount (USD)')}>
+													<Input
+														type='number'
+														name='initialPaymentAmount'
+														onChange={formik.handleChange}
+														onBlur={formik.handleBlur}
+														value={formik.values.initialPaymentAmount}
+														placeholder={t(
+															'Enter initial payment amount',
+														)}
+														min={0}
+														step={0.01}
+														isValid={formik.isValid}
+														isTouched={
+															formik.touched.initialPaymentAmount &&
+															!!formik.errors.initialPaymentAmount
+														}
+														invalidFeedback={
+															formik.errors.initialPaymentAmount
+														}
+													/>
+												</FormGroup>
+											</div>
+											{/* Payment Method */}
+											<div className='col-md-6'>
+												<FormGroup
+													id='paymentMethod'
+													label={t('Payment Method')}>
+													<Select
+														name='paymentMethod'
+														onChange={formik.handleChange}
+														onBlur={formik.handleBlur}
+														value={formik.values.paymentMethod}
+														ariaLabel={t('Select payment method')}
+														isValid={formik.isValid}
+														isTouched={
+															formik.touched.paymentMethod &&
+															!!formik.errors.paymentMethod
+														}
+														invalidFeedback={
+															formik.errors.paymentMethod
+														}>
+														<Option value='cash'>{t('Cash')}</Option>
+														<Option value='transfer'>
+															{t('Transfer')}
+														</Option>
+													</Select>
+												</FormGroup>
+											</div>
+											{formik.values.membershipPlanId && (
 												<div className='col-12'>
 													<div className='alert alert-warning'>
-														{(() => {
-															const selectedPlan =
-																mockMembershipPlans.find(
-																	(plan) =>
-																		plan.id ===
-																		formik.values
-																			.membershipPlan,
-																);
-															if (!selectedPlan) return null;
-
-															const paymentAmount =
-																parseFloat(
-																	formik.values.paymentAmount,
-																) || 0;
-															const planPrice = selectedPlan.price;
-															const difference =
-																planPrice - paymentAmount;
-
-															return (
-																<div>
-																	<strong>
-																		{selectedPlan.name}
-																	</strong>
-																	<small>
-																		<br />
-																		<strong>
-																			{t('Plan Price')}:
-																		</strong>{' '}
-																		$
-																		{planPrice.toLocaleString()}
-																		{!isEditMode &&
-																			formik.values
-																				.paymentAmount && (
-																				<>
-																					<br />
-																					<strong>
-																						{t(
-																							'Payment Amount',
-																						)}
-																					</strong>
-																					: $
-																					{paymentAmount.toLocaleString()}
-																					<br />
-																					<strong>
-																						<span
-																							className={
-																								difference >
-																								0
-																									? 'text-danger'
-																									: difference <
-																										  0
-																										? 'text-success'
-																										: 'text-muted'
-																							}>
-																							{difference >
-																							0
-																								? t(
-																										'Remaining: ${{amount}}',
-																										{
-																											amount: difference.toLocaleString(),
-																										},
-																									)
-																								: difference <
-																									  0
-																									? t(
-																											'Overpaid: ${{amount}}',
-																											{
-																												amount: Math.abs(
-																													difference,
-																												).toLocaleString(),
-																											},
-																										)
-																									: t(
-																											'Fully Paid',
-																										)}
-																						</span>
-																					</strong>
-																				</>
-																			)}
-																		<br />
-																		<strong>
-																			{t('Type')}:
-																		</strong>{' '}
-																		{selectedPlan.type ===
-																		'monthly'
-																			? t(
-																					'Monthly ({{duration}} month(s))',
-																					{
-																						duration:
-																							selectedPlan.duration,
-																					},
-																				)
-																			: t(
-																					'Count-based ({{count}} visits)',
-																					{
-																						count: selectedPlan.visitCount,
-																					},
-																				)}
-																		{selectedPlan.type ===
-																			'monthly' && (
-																			<>
-																				<br />
-																				<strong>
-																					{t('Expires')}:
-																				</strong>{' '}
-																				{dayjs(
-																					formik.values
-																						.startDate,
-																				)
-																					.add(
-																						selectedPlan.duration ||
-																							1,
-																						'month',
-																					)
-																					.format(
-																						'DD/MM/YYYY',
-																					)}
-																			</>
-																		)}
-																	</small>
-																</div>
-															);
-														})()}
+														<PlanSummary
+															selectedPlanId={
+																formik.values.membershipPlanId
+															}
+															initialPaymentAmount={
+																formik.values.initialPaymentAmount
+															}
+															startDate={formik.values.startDate}
+															isEditMode={isEditMode}
+															membershipPlansData={
+																membershipPlansData
+															}
+														/>
 													</div>
 												</div>
 											)}
@@ -1019,12 +1004,7 @@ const AddMemberPage = () => {
 												isDisable={
 													!formik.isValid || isCreating || isUpdating
 												}
-												onClick={() => {
-													console.log(
-														'Submit button clicked - calling formik.handleSubmit()',
-													);
-													formik.handleSubmit();
-												}}>
+												onClick={formik.handleSubmit}>
 												{(isCreating || isUpdating) && (
 													<Spinner isSmall inButton />
 												)}

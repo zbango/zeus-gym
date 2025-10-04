@@ -71,14 +71,10 @@ export const useMembersList = (): UseMembersListReturn => {
 		(search: string) => {
 			setSearch(search);
 			filters.updateFilter('search', search);
-			// Update API params to include search
-			updateParams({
-				...filters.filters,
-				search,
-				page: 1,
-			});
+			// Reset to first page when searching
+			setPage(1);
 		},
-		[setSearch, filters, updateParams],
+		[setSearch, filters, setPage],
 	);
 
 	// Handle status filter
@@ -86,14 +82,10 @@ export const useMembersList = (): UseMembersListReturn => {
 		(status: string) => {
 			setStatusFilter(status);
 			filters.updateFilter('status', status);
-			// Update API params to include status
-			updateParams({
-				...filters.filters,
-				status,
-				page: 1,
-			});
+			// Reset to first page when filtering
+			setPage(1);
 		},
-		[setStatusFilter, filters, updateParams],
+		[setStatusFilter, filters, setPage],
 	);
 
 	// Handle advanced filters change
@@ -155,13 +147,11 @@ export const useMembersList = (): UseMembersListReturn => {
 		});
 	}, [filters, updateParams, setSearch, setStatusFilter]);
 
-	// Handle editing member
-	const handleEditMember = useCallback(
-		(memberId: string) => {
-			navigate(`/gym-management/members/edit/${memberId}`);
-		},
-		[navigate],
-	);
+	// Handle editing member - now just a placeholder since we use modal
+	const handleEditMember = useCallback((memberId: string) => {
+		// This is now handled by the modal in the component
+		console.log('Edit member:', memberId);
+	}, []);
 
 	return {
 		// Data

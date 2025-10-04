@@ -40,13 +40,35 @@ export const useMembersTableColumns = (
 			await deleteMember(member.id).unwrap();
 			toast.success(
 				t('Member {{name}} has been successfully deleted!', {
-					name: `${member.personalInfo.firstName} ${member.personalInfo.lastName}`,
+					name: `${member.personalInfo.name} ${member.personalInfo.lastName}`,
 				}),
 			);
 		} catch (error) {
 			toast.error(t('Failed to delete member. Please try again.'));
 			console.error('Delete member error:', error);
 		}
+	};
+
+	const getDeleteConfirmationMessage = (member: Member) => {
+		const hasPartialPayment =
+			member.membershipInfo.remainingAmount && member.membershipInfo.remainingAmount > 0;
+
+		if (hasPartialPayment) {
+			return t(
+				'Are you sure you want to delete member "{{name}}"? This member has a pending payment of ${{amount}}. This action cannot be undone.',
+				{
+					name: `${member.personalInfo.name} ${member.personalInfo.lastName}`,
+					amount: member.membershipInfo.remainingAmount,
+				},
+			);
+		}
+
+		return t(
+			'Are you sure you want to delete member "{{name}}"? This action cannot be undone.',
+			{
+				name: `${member.personalInfo.name} ${member.personalInfo.lastName}`,
+			},
+		);
 	};
 
 	return [
@@ -57,10 +79,9 @@ export const useMembersTableColumns = (
 			sortable: true,
 			render: (_, record) => (
 				<div className='d-flex align-items-center'>
-					<Avatar size={40} className='me-3' src='' />
 					<div>
 						<div className='fw-bold'>
-							{record.personalInfo.firstName} {record.personalInfo.lastName}
+							{record.personalInfo.name} {record.personalInfo.lastName}
 						</div>
 						<div className='small text-muted'>
 							{t('{{age}} years', { age: record.healthInfo.age })}
@@ -70,13 +91,23 @@ export const useMembersTableColumns = (
 			),
 		},
 		{
+			key: 'identification',
+			title: t('Identification'),
+			dataIndex: 'personalInfo.identification',
+			render: (_, record) => (
+				<div>
+					<div>{record.personalInfo.identification}</div>
+				</div>
+			),
+		},
+		{
 			key: 'contact',
 			title: t('Contact'),
 			dataIndex: 'personalInfo.email',
 			render: (_, record) => (
 				<div>
-					<div>{record.personalInfo.email}</div>
-					<div className='small text-muted'>{record.personalInfo.phone}</div>
+					<div>{record.personalInfo?.email || 'N/A'}</div>
+					<div className='small text-muted'>{record.personalInfo?.phone}</div>
 				</div>
 			),
 		},
@@ -123,11 +154,13 @@ export const useMembersTableColumns = (
 			dataIndex: 'id',
 			render: (_, record) => {
 				// This would be calculated based on payment data
-				const hasPartialPayment = false; // Mock data
+				const hasPartialPayment =
+					record.membershipInfo.remainingAmount &&
+					record.membershipInfo.remainingAmount > 0; // Mock data
 				return hasPartialPayment ? (
-					<span className='badge bg-warning'>
+					<span className='badge bg-danger'>
 						<Icon icon='Warning' size='sm' className='me-1' />
-						{t('Pending')}
+						{t('Pending')}: ${record.membershipInfo.remainingAmount}
 					</span>
 				) : (
 					<span className='badge bg-success'>
@@ -215,8 +248,8 @@ export const useMembersTableColumns = (
 							onClick={(e: React.MouseEvent) => {
 								e.stopPropagation();
 								if (isDeleting) return;
-								// Handle delete member
-								if (confirm(t('Are you sure you want to delete this member?'))) {
+								// Handle delete member with enhanced confirmation
+								if (confirm(getDeleteConfirmationMessage(record))) {
 									handleDeleteMember(record);
 								}
 							}}>

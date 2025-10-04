@@ -2,7 +2,72 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import QRCode from 'qrcode';
-import { Member } from '../../../../types/member.types';
+// API Response type for member creation
+interface MemberCreationResponse {
+	customer: {
+		id: string;
+		name: string;
+		lastName: string;
+		dateOfBirth: string;
+		email: string;
+		phone: string;
+		address: string;
+		identification: string;
+		medicalConditions: string;
+		status: string;
+		createdAt: string;
+		updatedAt: string;
+	};
+	progress: {
+		id: string;
+		customerId: string;
+		isCurrent: boolean;
+		age: number;
+		gender: string;
+		height: number;
+		weight: number;
+		createdAt: string;
+		updatedAt: string;
+	};
+	membership: {
+		id: string;
+		customerId: string;
+		membershipPlanId: string;
+		membershipPlan: {
+			id: string;
+			name: string;
+			type: string;
+			price: number;
+			duration?: number;
+			description: string;
+			status: string;
+			createdAt: string;
+			updatedAt: string;
+		};
+		startDate: string;
+		status: string;
+		totalAmount: number;
+		paidAmount: number;
+		remainingAmount: number;
+		createdAt: string;
+		updatedAt: string;
+	};
+	payment: {
+		id: string;
+		customerId: string;
+		membershipId: string;
+		customerName: string;
+		customerEmail: string;
+		customerPhone: string;
+		membershipPlanName: string;
+		membershipPlanType: string;
+		amount: number;
+		paymentMethod: string;
+		status: string;
+		createdAt: string;
+		updatedAt: string;
+	};
+}
 import Modal, { ModalBody, ModalHeader } from '../../../../components/bootstrap/Modal';
 import Icon from '../../../../components/icon/Icon';
 import Card, { CardBody } from '../../../../components/bootstrap/Card';
@@ -12,7 +77,7 @@ import Logo from '../../../../components/Logo';
 interface MemberSuccessDialogProps {
 	isOpen: boolean;
 	onClose: () => void;
-	member: Member | null;
+	member: MemberCreationResponse | null;
 	onNavigateToList: () => void;
 	onKeepCreating: () => void;
 }
@@ -24,6 +89,7 @@ const MemberSuccessDialog: React.FC<MemberSuccessDialogProps> = ({
 	onNavigateToList,
 	onKeepCreating,
 }) => {
+	console.log('member', member);
 	const { t } = useTranslation();
 	const cardRef = useRef<HTMLDivElement>(null);
 	const qrCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -31,8 +97,8 @@ const MemberSuccessDialog: React.FC<MemberSuccessDialogProps> = ({
 	const [isCapturing, setIsCapturing] = useState(false);
 
 	// Generate QR code data (member ID + gym info)
-	const qrData = `MEMBER_ID:${member?.id}|GYM:Zeus Gym|PHONE:${member?.personalInfo.phone}`;
-
+	const qrData = `MEMBER_ID:${member?.customer?.id}|GYM:Zeus Gym|PHONE:${member?.customer?.phone || ''}`;
+	console.log('qrData', qrData);
 	// Generate QR code on canvas
 	useEffect(() => {
 		if (member && qrCanvasRef.current) {
@@ -64,16 +130,14 @@ const MemberSuccessDialog: React.FC<MemberSuccessDialogProps> = ({
 	// WhatsApp sharing URL
 	const whatsappMessage = encodeURIComponent(
 		`🎉 ¡Bienvenido a Zeus Gym!\n\n` +
-			`Hola ${member.personalInfo.firstName} ${member.personalInfo.lastName},\n\n` +
+			`Hola ${member.customer?.name} ${member.customer?.lastName},\n\n` +
 			`Tu membresía ha sido activada exitosamente:\n` +
-			`📋 Plan: ${member.membershipInfo.plan}\n` +
-			`📅 Inicio: ${dayjs(member.membershipInfo.startDate).format('DD/MM/YYYY')}\n` +
-			`${member.membershipInfo.endDate ? `📅 Vence: ${dayjs(member.membershipInfo.endDate).format('DD/MM/YYYY')}` : ''}\n` +
-			`🏋️ ID de Miembro: ${member.id}\n\n` +
+			`📋 Plan: ${member.membership?.membershipPlan?.name}\n` +
+			`📅 Inicio: ${dayjs(member.membership?.startDate).format('DD/MM/YYYY')}\n\n` +
 			`¡Esperamos verte pronto en el gym! 💪`,
 	);
 
-	const whatsappUrl = `https://wa.me/${member.personalInfo.phone.replace(/[^0-9]/g, '')}?text=${whatsappMessage}`;
+	const whatsappUrl = `https://wa.me/${(member.customer?.phone || '').replace(/[^0-9]/g, '')}?text=${whatsappMessage}`;
 
 	const handleWhatsAppShare = () => {
 		window.open(whatsappUrl, '_blank');
@@ -103,7 +167,7 @@ const MemberSuccessDialog: React.FC<MemberSuccessDialogProps> = ({
 					// Create a temporary link to download the image
 					const link = document.createElement('a');
 					link.href = imageUrl;
-					link.download = `membership-card-${member.id}.png`;
+					link.download = `membership-card-${member.customer?.id}.png`;
 					document.body.appendChild(link);
 					link.click();
 					document.body.removeChild(link);
@@ -120,11 +184,11 @@ const MemberSuccessDialog: React.FC<MemberSuccessDialogProps> = ({
 			// Fallback: copy text to clipboard
 			const cardText =
 				`Zeus Gym Membership Card\n` +
-				`Member: ${member.personalInfo.firstName} ${member.personalInfo.lastName}\n` +
-				`ID: ${member.id}\n` +
-				`Plan: ${member.membershipInfo.plan}\n` +
-				`Start: ${dayjs(member.membershipInfo.startDate).format('DD/MM/YYYY')}\n` +
-				`Status: ${member.membershipInfo.status}`;
+				`Member: ${member.customer?.name} ${member.customer?.lastName}\n` +
+				`ID: ${member.customer?.id}\n` +
+				`Plan: ${member.membership?.membershipPlan?.name}\n` +
+				`Start: ${dayjs(member.membership?.startDate).format('DD/MM/YYYY')}\n` +
+				`Status: ${member.membership?.status}`;
 
 			await navigator.clipboard.writeText(cardText);
 		}
@@ -184,8 +248,7 @@ const MemberSuccessDialog: React.FC<MemberSuccessDialogProps> = ({
 								<div className='col-md-7'>
 									<div className='member-details'>
 										<h5 className='member-name mb-2'>
-											{member.personalInfo.firstName}{' '}
-											{member.personalInfo.lastName}
+											{member.customer?.name} {member.customer?.lastName}
 										</h5>
 										<div className='member-info mb-3'>
 											<div className='info-item mb-1'>
@@ -194,16 +257,18 @@ const MemberSuccessDialog: React.FC<MemberSuccessDialogProps> = ({
 													size='sm'
 													className='me-2 text-muted'
 												/>
-												<small>{member.personalInfo.email}</small>
+												<small>{member.customer?.email}</small>
 											</div>
-											<div className='info-item mb-1'>
-												<Icon
-													icon='Phone'
-													size='sm'
-													className='me-2 text-muted'
-												/>
-												<small>{member.personalInfo.phone}</small>
-											</div>
+											{member.customer?.phone && (
+												<div className='info-item mb-1'>
+													<Icon
+														icon='Phone'
+														size='sm'
+														className='me-2 text-muted'
+													/>
+													<small>{member.customer.phone}</small>
+												</div>
+											)}
 										</div>
 
 										{/* Membership Plan Info */}
@@ -211,7 +276,7 @@ const MemberSuccessDialog: React.FC<MemberSuccessDialogProps> = ({
 											<div className='plan-badge mb-2'>
 												<span className='badge bg-primary fs-6 px-3 py-2'>
 													<Icon icon='CardMembership' className='me-1' />
-													{member.membershipInfo.plan}
+													{member.membership?.membershipPlan?.name}
 												</span>
 											</div>
 											<div className='plan-details'>
@@ -220,20 +285,26 @@ const MemberSuccessDialog: React.FC<MemberSuccessDialogProps> = ({
 														{t('Start Date')}:
 													</small>
 													<small className='fw-bold'>
-														{dayjs(
-															member.membershipInfo.startDate,
-														).format('DD/MM/YYYY')}
+														{dayjs(member.membership?.startDate).format(
+															'DD/MM/YYYY',
+														)}
 													</small>
 												</div>
-												{member.membershipInfo.endDate && (
+												{member.membership?.membershipPlan?.type ===
+													'monthly' && (
 													<div className='d-flex justify-content-between mb-1'>
 														<small className='text-muted'>
 															{t('Expires')}:
 														</small>
 														<small className='fw-bold'>
-															{dayjs(
-																member.membershipInfo.endDate,
-															).format('DD/MM/YYYY')}
+															{dayjs(member.membership?.startDate)
+																.add(
+																	member.membership
+																		?.membershipPlan
+																		?.duration || 1,
+																	'month',
+																)
+																.format('DD/MM/YYYY')}
 														</small>
 													</div>
 												)}

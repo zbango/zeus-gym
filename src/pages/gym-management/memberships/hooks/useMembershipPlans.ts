@@ -1,42 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { mockMembershipPlans } from '../../../../common/data/gymMockData';
+import { toast } from 'react-toastify';
 import { IMembershipPlan } from '../../../../types/gym-types';
+import {
+	useGetMembershipPlansQuery,
+	useCreateMembershipPlanMutation,
+	useUpdateMembershipPlanMutation,
+	useDeleteMembershipPlanMutation,
+	useToggleMembershipPlanStatusMutation,
+} from '../../../../store/api/membershipPlansApi';
 
 export const useMembershipPlans = () => {
 	const { t } = useTranslation();
-	const [loading, setLoading] = useState(true);
-	const [plans, setPlans] = useState<IMembershipPlan[]>([]);
 	const [showModal, setShowModal] = useState(false);
 	const [editingPlan, setEditingPlan] = useState<IMembershipPlan | null>(null);
-	const [saving, setSaving] = useState(false);
-	const [alert, setAlert] = useState<{
-		type: 'success' | 'warning' | 'danger';
-		message: string;
-	} | null>(null);
 
-	// Load plans on mount
-	useEffect(() => {
-		const loadPlans = async () => {
-			setLoading(true);
-			// Simulate API call
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-			setPlans(mockMembershipPlans);
-			setLoading(false);
-		};
+	// API hooks
+	const { data: plansData, isLoading: loading, error } = useGetMembershipPlansQuery({});
+	const [createPlan, { isLoading: creatingPlan }] = useCreateMembershipPlanMutation();
+	const [updatePlan, { isLoading: updatingPlan }] = useUpdateMembershipPlanMutation();
+	const [deletePlan, { isLoading: deletingPlan }] = useDeleteMembershipPlanMutation();
+	const [toggleStatus, { isLoading: togglingStatus }] = useToggleMembershipPlanStatusMutation();
 
-		loadPlans();
-	}, []);
-
-	// Auto-hide alerts
-	useEffect(() => {
-		if (alert) {
-			const timer = setTimeout(() => {
-				setAlert(null);
-			}, 5000);
-			return () => clearTimeout(timer);
-		}
-	}, [alert]);
+	const plans = plansData?.plans || [];
+	const saving = creatingPlan || updatingPlan || deletingPlan || togglingStatus;
 
 	const handleAddPlan = () => {
 		setEditingPlan(null);
@@ -54,79 +41,69 @@ export const useMembershipPlans = () => {
 	};
 
 	const handleSubmitPlan = async (values: any) => {
-		setSaving(true);
-
 		try {
-			// Simulate API call
-			await new Promise((resolve) => setTimeout(resolve, 1500));
-
-			const planData: IMembershipPlan = {
-				id: editingPlan ? editingPlan.id : `plan-${Date.now()}`,
+			const planData = {
 				name: values.name,
 				type: values.type,
 				price: parseInt(values.price),
 				duration: values.type === 'monthly' ? parseInt(values.duration) : undefined,
 				visitCount: values.type === 'count-based' ? parseInt(values.visitCount) : undefined,
 				description: values.description,
-				isActive: values.isActive,
+				status: values.status,
 			};
 
 			if (editingPlan) {
-				setPlans((prev) =>
-					prev.map((plan) => (plan.id === editingPlan.id ? planData : plan)),
+				await updatePlan({ id: editingPlan.id, ...planData }).unwrap();
+				toast.success(
+					t('Plan "{{name}}" has been updated successfully!', {
+						name: values.name,
+					}),
 				);
-				setAlert({
-					type: 'success',
-					message: t('Plan "{{name}}" has been updated successfully!', {
-						name: values.name,
-					}),
-				});
 			} else {
-				setPlans((prev) => [planData, ...prev]);
-				setAlert({
-					type: 'success',
-					message: t('Plan "{{name}}" has been created successfully!', {
+				await createPlan(planData).unwrap();
+				toast.success(
+					t('Plan "{{name}}" has been created successfully!', {
 						name: values.name,
 					}),
-				});
+				);
 			}
 
 			setShowModal(false);
 			setEditingPlan(null);
-		} catch (error) {
-			setAlert({
-				type: 'danger',
-				message: t('An error occurred while saving the plan. Please try again.'),
-			});
-		} finally {
-			setSaving(false);
+		} catch (error: any) {
+			toast.error(
+				error?.data?.message ||
+					t('An error occurred while saving the plan. Please try again.'),
+			);
 		}
 	};
 
 	const handleToggleStatus = async (planId: string) => {
-		setSaving(true);
-		// Simulate API call
-		await new Promise((resolve) => setTimeout(resolve, 500));
-
-		setPlans((prev) =>
-			prev.map((plan) => (plan.id === planId ? { ...plan, isActive: !plan.isActive } : plan)),
-		);
-		setSaving(false);
+		try {
+			const plan = plans.find((p) => p.id === planId);
+			if (plan) {
+				await toggleStatus({
+					id: planId,
+					status: plan.status === 'active' ? 'inactive' : 'active',
+				}).unwrap();
+				toast.success(t('Plan status has been updated successfully!'));
+			}
+		} catch (error: any) {
+			toast.error(
+				error?.data?.message || t('An error occurred while updating the plan status.'),
+			);
+		}
 	};
 
 	const handleDeletePlan = async (planId: string) => {
 		if (!confirm(t('Are you sure you want to delete this plan?'))) return;
 
-		setSaving(true);
-		// Simulate API call
-		await new Promise((resolve) => setTimeout(resolve, 500));
-
-		setPlans((prev) => prev.filter((plan) => plan.id !== planId));
-		setAlert({
-			type: 'success',
-			message: t('Plan has been deleted successfully!'),
-		});
-		setSaving(false);
+		try {
+			await deletePlan(planId).unwrap();
+			toast.success(t('Plan has been deleted successfully!'));
+		} catch (error: any) {
+			toast.error(error?.data?.message || t('An error occurred while deleting the plan.'));
+		}
 	};
 
 	return {
@@ -136,7 +113,6 @@ export const useMembershipPlans = () => {
 		showModal,
 		editingPlan,
 		saving,
-		alert,
 
 		// Actions
 		handleAddPlan,

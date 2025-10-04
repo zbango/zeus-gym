@@ -63,6 +63,7 @@ export const randomColor = () => {
 };
 
 export const priceFormat = (price: number) => {
+	if (!price) return '0';
 	return price.toLocaleString('en-US', {
 		style: 'currency',
 		currency: 'USD',

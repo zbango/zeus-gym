@@ -381,7 +381,7 @@ const DynamicTable = <T extends Record<string, any>>({
 
 // Helper function to get nested object values
 function getNestedValue(obj: any, path: string): any {
-	return path.split('.').reduce((current, key) => current?.[key], obj);
+	return path?.split('.').reduce((current, key) => current?.[key], obj);
 }
 
 export default DynamicTable;

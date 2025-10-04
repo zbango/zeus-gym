@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PageWrapper from '../../../layout/PageWrapper/PageWrapper';
@@ -12,6 +12,7 @@ import MembersFilters from './components/MembersFilters';
 import MembersAdvancedFiltersOffCanvas from './components/MembersAdvancedFiltersOffCanvas';
 import MemberProfileSidePanel from './components/MemberProfileSidePanel';
 import ActiveFilterBadges from './components/ActiveFilterBadges';
+import EditMemberModal from './components/EditMemberModal';
 import DynamicTable from '../../../components/table/DynamicTable';
 import { useMembersTableColumns } from '../../../components/members/MembersTableConfig';
 import Card, { CardHeader, CardActions, CardBody } from '../../../components/bootstrap/Card';
@@ -24,6 +25,10 @@ import { useMembersList } from './hooks/useMembersList';
 const MembersListPage = () => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
+
+	// Edit modal state
+	const [showEditModal, setShowEditModal] = useState(false);
+	const [selectedMember, setSelectedMember] = useState<any>(null);
 
 	// Use the comprehensive state management hook
 	const {
@@ -50,6 +55,26 @@ const MembersListPage = () => {
 		handleEditMember,
 		refresh,
 	} = useMembersList();
+
+	// Handle edit member with modal
+	const handleEditMemberModal = (memberId: string) => {
+		const member = members.find((m) => m.id === memberId);
+		if (member) {
+			setSelectedMember(member);
+			setShowEditModal(true);
+		}
+	};
+
+	// Handle edit modal close
+	const handleCloseEditModal = () => {
+		setShowEditModal(false);
+		setSelectedMember(null);
+	};
+
+	// Handle successful edit
+	const handleEditSuccess = () => {
+		refresh(); // Refresh the data after successful edit
+	};
 
 	// Debug pagination data
 	console.log('Pagination Debug:', {
@@ -94,13 +119,13 @@ const MembersListPage = () => {
 							title='Members List'
 							icon='Group'
 							iconColor='info'
-							subtitle='Manage your members list here'
+							subtitle='View and manage all gym members'
 						/>
 
 						{/* Right side - Search */}
 						<CardActions className='d-flex flex-wrap align-items-center gap-3'>
 							<MembersSearch
-								placeholder='Search members...'
+								placeholder='Search users...'
 								onSearchChange={handleSearchChange}
 							/>
 							<MembersFilters
@@ -125,7 +150,10 @@ const MembersListPage = () => {
 					<CardBody className='p-0'>
 						<DynamicTable
 							data={members}
-							columns={useMembersTableColumns(ui.handleViewProfile, handleEditMember)}
+							columns={useMembersTableColumns(
+								ui.handleViewProfile,
+								handleEditMemberModal,
+							)}
 							loading={isLoading}
 							rowKey='id'
 							pagination={{
@@ -152,7 +180,15 @@ const MembersListPage = () => {
 					isOpen={ui.showMemberProfile}
 					onClose={ui.handleCloseProfile}
 					member={ui.selectedMember}
-					onEdit={handleEditMember}
+					onEdit={handleEditMemberModal}
+				/>
+
+				{/* Edit Member Modal */}
+				<EditMemberModal
+					isOpen={showEditModal}
+					onClose={handleCloseEditModal}
+					member={selectedMember}
+					onSuccess={handleEditSuccess}
 				/>
 			</Page>
 		</PageWrapper>

@@ -8,12 +8,10 @@ import Button from '../../../components/bootstrap/Button';
 import Page from '../../../layout/Page/Page';
 import PageWrapper from '../../../layout/PageWrapper/PageWrapper';
 import Card, { CardBody, CardHeader } from '../../../components/bootstrap/Card';
-import Spinner from '../../../components/bootstrap/Spinner';
-import Alert from '../../../components/bootstrap/Alert';
 import { useMembershipPlans } from './hooks/useMembershipPlans';
-import MembershipPlansHeader from './components/MembershipPlansHeader';
 import MembershipPlanCard from './components/MembershipPlanCard';
 import MembershipPlanModal from './components/MembershipPlanModal';
+import MembershipPlansSkeleton from './components/MembershipPlansSkeleton';
 
 const MembershipPlansPage = () => {
 	const { t } = useTranslation();
@@ -25,7 +23,6 @@ const MembershipPlansPage = () => {
 		showModal,
 		editingPlan,
 		saving,
-		alert,
 		handleAddPlan,
 		handleEditPlan,
 		handleCloseModal,
@@ -68,44 +65,48 @@ const MembershipPlansPage = () => {
 				</Card>
 
 				{/* Plans Grid */}
-				<Card stretch className='mt-4'>
-					<CardBody className='p-4'>
-						<div className='row g-4'>
-							{plans.map((plan) => (
-								<div key={plan.id} className='col-lg-4 col-md-6'>
-									<MembershipPlanCard
-										plan={plan}
-										onEdit={handleEditPlan}
-										onDelete={handleDeletePlan}
-										onToggleStatus={handleToggleStatus}
-										saving={saving}
-									/>
-								</div>
-							))}
-
-							{/* Add New Plan Card */}
-							<div className='col-lg-4 col-md-6'>
-								<Card
-									className='h-100 border-dashed cursor-pointer'
-									onClick={handleAddPlan}
-									style={{ borderStyle: 'dashed', borderWidth: '2px' }}>
-									<CardBody className='d-flex flex-column justify-content-center align-items-center text-center py-5'>
-										<Icon
-											icon='Add'
-											size='3x'
-											color='secondary'
-											className='mb-3'
+				{loading ? (
+					<MembershipPlansSkeleton />
+				) : (
+					<Card stretch className='mt-4'>
+						<CardBody className='p-4'>
+							<div className='row g-4'>
+								{plans.map((plan) => (
+									<div key={plan.id} className='col-lg-4 col-md-6'>
+										<MembershipPlanCard
+											plan={plan}
+											onEdit={handleEditPlan}
+											onDelete={handleDeletePlan}
+											onToggleStatus={handleToggleStatus}
+											saving={saving}
 										/>
-										<h5 className='text-muted'>{t('Add New Plan')}</h5>
-										<p className='text-muted'>
-											{t('Create a new membership plan')}
-										</p>
-									</CardBody>
-								</Card>
+									</div>
+								))}
+
+								{/* Add New Plan Card */}
+								<div className='col-lg-4 col-md-6'>
+									<Card
+										className='h-100 border-dashed cursor-pointer'
+										onClick={handleAddPlan}
+										style={{ borderStyle: 'dashed', borderWidth: '2px' }}>
+										<CardBody className='d-flex flex-column justify-content-center align-items-center text-center py-5'>
+											<Icon
+												icon='Add'
+												size='3x'
+												color='secondary'
+												className='mb-3'
+											/>
+											<h5 className='text-muted'>{t('Add New Plan')}</h5>
+											<p className='text-muted'>
+												{t('Create a new membership plan')}
+											</p>
+										</CardBody>
+									</Card>
+								</div>
 							</div>
-						</div>
-					</CardBody>
-				</Card>
+						</CardBody>
+					</Card>
+				)}
 
 				{/* Add/Edit Plan Modal */}
 				<MembershipPlanModal

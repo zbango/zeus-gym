@@ -52,6 +52,7 @@
 		"pascalcase": "^2.0.0",
 		"payment": "^2.4.7",
 		"prismjs": "^1.30.0",
+		"qr-scanner": "^1.4.2",
 		"qrcode": "^1.5.4",
 		"rc-tree": "^5.13.1",
 		"react": "^19.1.0",

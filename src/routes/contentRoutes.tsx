@@ -17,6 +17,7 @@ const GYM = {
 	INVENTORY: lazy(() => import('../pages/gym-management/store/InventoryPage')),
 	USERS: lazy(() => import('../pages/gym-management/users/UsersManagementPage')),
 	SETTINGS: lazy(() => import('../pages/gym-management/settings/GymSettingsPage')),
+	QR_SCANNER: lazy(() => import('../pages/gym-management/qr-scanner/QRScannerPage')),
 };
 const AUTH = {
 	PAGE_404: lazy(() => import('../pages/presentation/auth/Page404')),
@@ -135,6 +136,14 @@ const presentation: RouteProps[] = [
 		element: (
 			<ProtectedRoute requiredPermission='settings.view'>
 				<GYM.SETTINGS />
+			</ProtectedRoute>
+		),
+	},
+	{
+		path: '/gym-management/qr-scanner',
+		element: (
+			<ProtectedRoute>
+				<GYM.QR_SCANNER />
 			</ProtectedRoute>
 		),
 	},

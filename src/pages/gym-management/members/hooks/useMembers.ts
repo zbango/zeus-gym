@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
 	useGetMembersQuery,
@@ -12,6 +12,7 @@ import {
 	CreateMemberRequest,
 	UpdateMemberRequest,
 } from '../../../../types/member.types';
+import { extractErrorMessage, ERROR_MESSAGES } from '../../../../helpers/errorUtils';
 
 export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 	const { t } = useTranslation();
@@ -25,8 +26,22 @@ export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 		...initialParams,
 	});
 
-	// RTK Query hooks
-	const { data: membersData, isLoading, isError, error, refetch } = useGetMembersQuery(params);
+	// Local search and status state (separate from API params)
+	const [localSearch, setLocalSearch] = useState('');
+	const [localStatus, setLocalStatus] = useState('');
+
+	// RTK Query hooks - fetch all data without search and status filters
+	const {
+		data: membersData,
+		isLoading,
+		isError,
+		error,
+		refetch,
+	} = useGetMembersQuery({
+		...params,
+		search: '', // Don't send search to API
+		status: '', // Don't send status to API
+	});
 
 	const [createMember, { isLoading: isCreating }] = useCreateMemberMutation();
 	const [updateMember, { isLoading: isUpdating }] = useUpdateMemberMutation();
@@ -60,19 +75,15 @@ export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 		[updateParams],
 	);
 
-	const setSearch = useCallback(
-		(search: string) => {
-			updateParams({ page: 1, search });
-		},
-		[updateParams],
-	);
+	const setSearch = useCallback((search: string) => {
+		setLocalSearch(search);
+		// Don't update API params for search
+	}, []);
 
-	const setStatusFilter = useCallback(
-		(status: string) => {
-			updateParams({ page: 1, status });
-		},
-		[updateParams],
-	);
+	const setStatusFilter = useCallback((status: string) => {
+		setLocalStatus(status);
+		// Don't update API params for status
+	}, []);
 
 	const setSorting = useCallback(
 		(sortBy: string, sortOrder: 'asc' | 'desc') => {
@@ -87,10 +98,13 @@ export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 			try {
 				const result = await createMember(memberData).unwrap();
 				return { success: true, data: result };
-			} catch (error) {
+			} catch (error: any) {
+				// Extract error message from API response with fallback
+				const errorMessage = extractErrorMessage(error, t(ERROR_MESSAGES.CREATE_MEMBER));
+
 				return {
 					success: false,
-					error: t('Failed to create member. Please try again.'),
+					error: errorMessage,
 				};
 			}
 		},
@@ -102,10 +116,13 @@ export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 			try {
 				const result = await updateMember(memberData).unwrap();
 				return { success: true, data: result };
-			} catch (error) {
+			} catch (error: any) {
+				// Extract error message from API response with fallback
+				const errorMessage = extractErrorMessage(error, t(ERROR_MESSAGES.UPDATE_MEMBER));
+
 				return {
 					success: false,
-					error: t('Failed to update member. Please try again.'),
+					error: errorMessage,
 				};
 			}
 		},
@@ -130,10 +147,13 @@ export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 			try {
 				await deleteMember(memberId).unwrap();
 				return { success: true };
-			} catch (error) {
+			} catch (error: any) {
+				// Extract error message from API response with fallback
+				const errorMessage = extractErrorMessage(error, t(ERROR_MESSAGES.DELETE_MEMBER));
+
 				return {
 					success: false,
-					error: t('Failed to delete member. Please try again.'),
+					error: errorMessage,
 				};
 			}
 		},
@@ -145,15 +165,54 @@ export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 			try {
 				const result = await updateMemberStatus({ id: memberId, status }).unwrap();
 				return { success: true, data: result };
-			} catch (error) {
+			} catch (error: any) {
+				// Extract error message from API response with fallback
+				const errorMessage = extractErrorMessage(error, t(ERROR_MESSAGES.UPDATE_STATUS));
+
 				return {
 					success: false,
-					error: t('Failed to update member status. Please try again.'),
+					error: errorMessage,
 				};
 			}
 		},
 		[updateMemberStatus, t],
 	);
+
+	// Local filtering logic
+	const allMembers = membersData?.members || [];
+	const filteredMembers = useMemo(() => {
+		let filtered = allMembers;
+
+		// Apply search filter
+		if (localSearch) {
+			const searchLower = localSearch.toLowerCase();
+			filtered = filtered.filter((member) => {
+				return (
+					member.personalInfo.firstName.toLowerCase().includes(searchLower) ||
+					member.personalInfo.lastName.toLowerCase().includes(searchLower) ||
+					member.personalInfo.identification.toLowerCase().includes(searchLower) ||
+					`${member.personalInfo.firstName} ${member.personalInfo.lastName}`
+						.toLowerCase()
+						.includes(searchLower)
+				);
+			});
+		}
+
+		// Apply status filter
+		if (localStatus) {
+			filtered = filtered.filter((member) => {
+				return member.status === localStatus;
+			});
+		}
+
+		return filtered;
+	}, [allMembers, localSearch, localStatus]);
+
+	// Apply pagination to filtered results
+	const startIndex = (params.page - 1) * params.limit;
+	const endIndex = startIndex + params.limit;
+	const paginatedMembers = filteredMembers.slice(startIndex, endIndex);
+	const totalFiltered = filteredMembers.length;
 
 	// Refresh data
 	const refresh = useCallback(() => {
@@ -162,10 +221,10 @@ export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 
 	return {
 		// Data
-		members: membersData?.members || [],
-		total: membersData?.total || 0,
-		currentPage: membersData?.page || 1,
-		pageSize: membersData?.limit || 10,
+		members: paginatedMembers,
+		total: totalFiltered,
+		currentPage: params.page,
+		pageSize: params.limit,
 
 		// Loading states
 		isLoading,

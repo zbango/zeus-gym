@@ -5,9 +5,57 @@ export interface BaseEntity {
 	updatedAt: string;
 }
 
-// Member related types
+// API Payload types for customer registration
+export interface CustomerRegistrationPayload {
+	// Personal Information
+	name: string;
+	lastName: string;
+	dateOfBirth: string;
+	email?: string;
+	phone?: string;
+	address?: string;
+	identification?: string;
+	medicalConditions?: string;
+
+	// Progress Information (Required)
+	age: number;
+	gender: 'male' | 'female';
+	height: number; // in cm
+	weight: number; // in kg
+	chest?: number; // in cm
+	waist?: number; // in cm
+	hip?: number; // in cm
+	arms?: number; // in cm
+	thighs?: number; // in cm
+
+	// Membership Information (Required)
+	membershipPlanId: string;
+	startDate: string;
+	totalAmount: number;
+
+	// Payment Information (Required)
+	initialPaymentAmount: number;
+	paymentMethod: 'cash' | 'transfer';
+	paymentReference?: string;
+	paymentNotes?: string;
+}
+
+// API Payload types for customer update
+export interface CustomerUpdatePayload {
+	name?: string;
+	lastName?: string;
+	dateOfBirth?: string;
+	email?: string;
+	phone?: string;
+	address?: string;
+	identification?: string;
+	medicalConditions?: string;
+	status?: 'active' | 'inactive' | 'suspended';
+}
+
+// Legacy types for backward compatibility
 export interface PersonalInfo {
-	firstName: string;
+	name: string;
 	lastName: string;
 	email: string;
 	phone: string;
@@ -50,6 +98,9 @@ export interface MembershipInfo {
 	endDate?: string;
 	remainingVisits?: number;
 	status: 'active' | 'inactive' | 'suspended' | 'expired';
+	totalAmount?: number;
+	paidAmount?: number;
+	remainingAmount?: number;
 }
 
 // Main Member interface
@@ -59,16 +110,24 @@ export interface Member extends BaseEntity {
 	progressTracking: ProgressTracking;
 	membershipInfo: MembershipInfo;
 	registrationDate: string;
+	status: 'active' | 'inactive' | 'suspended' | 'expired';
 }
 
 // API Request/Response types
-export interface CreateMemberRequest {
+export interface CreateMemberRequest extends CustomerRegistrationPayload {}
+
+export interface UpdateMemberRequest extends CustomerUpdatePayload {
+	id: string;
+}
+
+// Legacy types for backward compatibility
+export interface LegacyCreateMemberRequest {
 	personalInfo: PersonalInfo;
 	healthInfo: Omit<HealthInfo, 'id'>;
 	membershipInfo: Omit<MembershipInfo, 'id'>;
 }
 
-export interface UpdateMemberRequest extends Partial<CreateMemberRequest> {
+export interface LegacyUpdateMemberRequest extends Partial<LegacyCreateMemberRequest> {
 	id: string;
 }
 
@@ -80,8 +139,8 @@ export interface MemberListResponse {
 }
 
 export interface MemberListParams {
-	page?: number;
-	limit?: number;
+	page: number;
+	limit: number;
 	search?: string;
 	status?: string;
 	sortBy?: string;

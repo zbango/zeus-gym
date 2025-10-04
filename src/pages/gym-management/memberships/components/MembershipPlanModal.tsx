@@ -43,14 +43,13 @@ const MembershipPlanModal: React.FC<MembershipPlanModalProps> = ({
 			duration: '',
 			visitCount: '',
 			description: '',
-			isActive: true,
+			status: 'active',
 		},
 		validate: (values) => {
 			const errors: any = {};
 
 			if (!values.name) errors.name = t('Plan name is required');
 			if (!values.price) errors.price = t('Price is required');
-			if (!values.description) errors.description = t('Description is required');
 
 			if (values.type === 'monthly' && !values.duration) {
 				errors.duration = t('Duration is required for monthly plans');
@@ -82,10 +81,19 @@ const MembershipPlanModal: React.FC<MembershipPlanModalProps> = ({
 				duration: editingPlan.duration ? editingPlan.duration.toString() : '',
 				visitCount: editingPlan.visitCount ? editingPlan.visitCount.toString() : '',
 				description: editingPlan.description,
-				isActive: editingPlan.isActive,
+				status: editingPlan.status,
 			});
 		} else {
-			formik.resetForm();
+			// Reset to initial values for new plan
+			formik.setValues({
+				name: '',
+				type: 'monthly',
+				price: '',
+				duration: '',
+				visitCount: '',
+				description: '',
+				status: 'active',
+			});
 		}
 	}, [editingPlan]);
 
@@ -106,7 +114,6 @@ const MembershipPlanModal: React.FC<MembershipPlanModalProps> = ({
 									onChange={formik.handleChange}
 									onBlur={formik.handleBlur}
 									value={formik.values.name}
-									placeholder={t('e.g., Premium Monthly')}
 									isValid={formik.touched.name && !formik.errors.name}
 									isTouched={formik.touched.name && !!formik.errors.name}
 									invalidFeedback={formik.errors.name}
@@ -139,7 +146,6 @@ const MembershipPlanModal: React.FC<MembershipPlanModalProps> = ({
 									onChange={formik.handleChange}
 									onBlur={formik.handleBlur}
 									value={formik.values.price}
-									placeholder='45'
 									min={0}
 									isValid={formik.touched.price && !formik.errors.price}
 									isTouched={formik.touched.price && !!formik.errors.price}
@@ -156,7 +162,6 @@ const MembershipPlanModal: React.FC<MembershipPlanModalProps> = ({
 										onChange={formik.handleChange}
 										onBlur={formik.handleBlur}
 										value={formik.values.duration}
-										placeholder='1'
 										min={1}
 										max={12}
 										isValid={formik.touched.duration && !formik.errors.duration}
@@ -174,7 +179,6 @@ const MembershipPlanModal: React.FC<MembershipPlanModalProps> = ({
 										onChange={formik.handleChange}
 										onBlur={formik.handleBlur}
 										value={formik.values.visitCount}
-										placeholder='12'
 										min={1}
 										max={100}
 										isValid={
@@ -210,12 +214,21 @@ const MembershipPlanModal: React.FC<MembershipPlanModalProps> = ({
 						<div className='col-12'>
 							<FormGroup>
 								<Checks
-									id='isActive'
+									id='status'
 									type='switch'
-									label={t('Plan is active')}
-									name='isActive'
-									onChange={formik.handleChange}
-									checked={formik.values.isActive}
+									label={
+										formik.values.status === 'active'
+											? t('Plan is active')
+											: t('Plan is inactive')
+									}
+									name='status'
+									onChange={(e) => {
+										formik.setFieldValue(
+											'status',
+											e.target.checked ? 'active' : 'inactive',
+										);
+									}}
+									checked={formik.values.status === 'active'}
 								/>
 							</FormGroup>
 						</div>
@@ -223,23 +236,37 @@ const MembershipPlanModal: React.FC<MembershipPlanModalProps> = ({
 						{/* Preview */}
 						{formik.values.name && formik.values.price && (
 							<div className='col-12'>
-								<div className='alert alert-info'>
-									<h6>{t('Preview')}:</h6>
-									<strong>{formik.values.name}</strong> -{' '}
-									{priceFormat(parseInt(formik.values.price || '0'))}
-									<br />
-									<small>
-										{formik.values.type === 'monthly'
-											? t('Duration: {{duration}} month(s)', {
-													duration: formik.values.duration || 1,
-													count: parseInt(formik.values.duration) || 1,
-												})
-											: t('Visits: {{count}}', {
-													count: parseInt(formik.values.visitCount) || 1,
-												})}
-										<br />
-										{formik.values.description}
-									</small>
+								<div className='alert alert-light'>
+									<div className='row'>
+										<div className='col-12'>
+											<strong>{formik.values.name}</strong>
+										</div>
+										<div className='col-12'>
+											{priceFormat(parseInt(formik.values.price || '0'))}
+										</div>
+										<div className='col-12'>
+											<small>
+												{formik.values.type === 'monthly'
+													? t('Duration: {{duration}} month(s)', {
+															duration: formik.values.duration || 1,
+															count:
+																parseInt(formik.values.duration) ||
+																1,
+														})
+													: t('Visits: {{count}}', {
+															count:
+																parseInt(
+																	formik.values.visitCount,
+																) || 1,
+														})}
+											</small>
+										</div>
+										{formik.values.description && (
+											<div className='col-12'>
+												<small>{formik.values.description}</small>
+											</div>
+										)}
+									</div>
 								</div>
 							</div>
 						)}

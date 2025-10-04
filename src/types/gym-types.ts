@@ -63,7 +63,7 @@ export interface IMembershipPlan {
 	duration?: number; // months for monthly plans
 	visitCount?: number; // visits for count-based plans
 	description: string;
-	isActive: boolean;
+	status: 'active' | 'inactive';
 }
 
 export interface IPayment {

@@ -81,7 +81,7 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 					{showQRCode && (
 						<QRCodeGenerator
 							memberId={member.id}
-							memberName={`${member.personalInfo.firstName} ${member.personalInfo.lastName}`}
+							memberName={`${member.personalInfo.name} ${member.personalInfo.lastName}`}
 							onClose={() => setShowQRCode(false)}
 						/>
 					)}
@@ -93,8 +93,7 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 								<Avatar size={80} className='flex-shrink-0' src='' />
 								<div className='flex-grow-1'>
 									<h4 className='mb-1'>
-										{member.personalInfo.firstName}{' '}
-										{member.personalInfo.lastName}
+										{member.personalInfo.name} {member.personalInfo.lastName}
 									</h4>
 									<p className='text-muted mb-2'>{member.personalInfo.email}</p>
 									<div className='d-flex align-items-center gap-2'>
@@ -148,7 +147,7 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 							<div className='row g-3'>
 								<div className='col-6'>
 									<small className='text-muted'>{t('First Name')}</small>
-									<div className='fw-bold'>{member.personalInfo.firstName}</div>
+									<div className='fw-bold'>{member.personalInfo.name}</div>
 								</div>
 								<div className='col-6'>
 									<small className='text-muted'>{t('Last Name')}</small>
@@ -156,11 +155,11 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 								</div>
 								<div className='col-6'>
 									<small className='text-muted'>{t('Email')}</small>
-									<div>{member.personalInfo.email}</div>
+									<div>{member.personalInfo.email || 'N/A'}</div>
 								</div>
 								<div className='col-6'>
 									<small className='text-muted'>{t('Phone')}</small>
-									<div>{member.personalInfo.phone}</div>
+									<div>{member.personalInfo.phone || 'N/A'}</div>
 								</div>
 								<div className='col-6'>
 									<small className='text-muted'>{t('Birth Date')}</small>
@@ -174,11 +173,11 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 								</div>
 								<div className='col-6'>
 									<small className='text-muted'>{t('Identification')}</small>
-									<div>{member.personalInfo.identification || '-'}</div>
+									<div>{member.personalInfo.identification || 'N/A'}</div>
 								</div>
 								<div className='col-12'>
 									<small className='text-muted'>{t('Address')}</small>
-									<div>{member.personalInfo.address || '-'}</div>
+									<div>{member.personalInfo.address || 'N/A'}</div>
 								</div>
 							</div>
 						</CardBody>

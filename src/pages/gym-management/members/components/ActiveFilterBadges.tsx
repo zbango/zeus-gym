@@ -94,6 +94,7 @@ const ActiveFilterBadges: React.FC<ActiveFilterBadgesProps> = ({
 			weightRange: t('Weight Range'),
 			heightRange: t('Height Range'),
 			registrationDateRange: t('Registration Date'),
+			status: t('Status'),
 		};
 		return labels[key] || key;
 	};

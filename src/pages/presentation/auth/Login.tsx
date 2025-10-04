@@ -138,7 +138,7 @@ const Login: FC<ILoginProps> = ({ isSignUp }) => {
 												'text-light': darkModeStatus,
 											},
 										)}
-										aria-label='Facit'>
+										aria-label='Zeus Gym'>
 										<Logo width={200} height={150} />
 									</Link>
 								</div>

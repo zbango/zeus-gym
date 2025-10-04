@@ -26,18 +26,18 @@ const MembershipPlanCard: React.FC<MembershipPlanCardProps> = ({
 	return (
 		<Card
 			className={classNames('h-100 position-relative', {
-				'border-success': plan.isActive,
-				'border-secondary': !plan.isActive,
+				'border-success': plan.status === 'active',
+				'border-secondary': plan.status === 'inactive',
 			})}
 			shadow='sm'>
 			{/* Status Badge */}
 			<div className='position-absolute top-0 end-0 p-2'>
 				<span
 					className={classNames('badge', {
-						'bg-success': plan.isActive,
-						'bg-secondary': !plan.isActive,
+						'bg-success': plan.status === 'active',
+						'bg-secondary': plan.status === 'inactive',
 					})}>
-					{plan.isActive ? t('Active') : t('Inactive')}
+					{plan.status === 'active' ? t('Active') : t('Inactive')}
 				</span>
 			</div>
 

@@ -164,6 +164,12 @@ export const demoPagesMenu = {
 		path: 'gym-management/settings',
 		icon: 'Settings',
 	},
+	gymQRScanner: {
+		id: 'gymQRScanner',
+		text: 'QR Scanner',
+		path: 'gym-management/qr-scanner',
+		icon: 'QrCode',
+	},
 };
 
 export const pageLayoutTypesPagesMenu = {
@@ -809,6 +815,7 @@ const menuPermissions: Record<string, { roles: string[]; permissions: string[] }
 	inventory: { roles: ['admin'], permissions: ['store.edit'] },
 	gymUsers: { roles: ['admin'], permissions: [] },
 	gymSettings: { roles: ['admin', 'staff'], permissions: ['settings.view'] },
+	gymQRScanner: { roles: ['admin', 'staff'], permissions: [] },
 };
 
 // Function to check if user has access to a menu item
