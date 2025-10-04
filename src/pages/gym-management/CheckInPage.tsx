@@ -62,7 +62,7 @@ const CheckInPage = () => {
 	const filteredMembers = members.filter(
 		(member) =>
 			member.membershipInfo.status === 'active' &&
-			(member.personalInfo.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			(member.personalInfo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 				member.personalInfo.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
 				member.personalInfo.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
 				member.personalInfo.phone.includes(searchTerm)),

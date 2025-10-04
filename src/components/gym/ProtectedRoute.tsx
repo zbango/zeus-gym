@@ -27,27 +27,12 @@ const ProtectedRoute: React.FC<IProtectedRouteProps> = ({
 	// Debug any navigation that happens
 	const originalNavigate = navigate;
 	const debugNavigate = (...args) => {
-		console.log('🚨 NAVIGATION DETECTED FROM PROTECTED ROUTE:', args);
-		console.trace('Navigation stack trace');
 		return originalNavigate(...args);
 	};
 
-	console.log('ProtectedRoute render:', {
-		isGymAuthenticated,
-		gymLoading,
-		user: gymUser?.username,
-		pathname: location.pathname,
-	});
-
 	useEffect(() => {
-		console.log('ProtectedRoute useEffect:', {
-			gymLoading,
-			isGymAuthenticated,
-			pathname: location.pathname,
-		});
 		// Only redirect if we're sure the user is not authenticated and loading is complete
 		if (!gymLoading && !isGymAuthenticated && location.pathname !== '/auth-pages/login') {
-			console.log('ProtectedRoute: Redirecting to login');
 			// Store the attempted location for redirect after login
 			localStorage.setItem('gym_redirect_after_login', location.pathname);
 			debugNavigate('/auth-pages/login');

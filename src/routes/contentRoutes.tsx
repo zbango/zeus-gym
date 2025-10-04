@@ -7,6 +7,7 @@ const GYM = {
 	DASHBOARD: lazy(() => import('../pages/gym-management/GymDashboardPage')),
 	MEMBERS_LIST: lazy(() => import('../pages/gym-management/members/MembersListPage')),
 	ADD_MEMBER: lazy(() => import('../pages/gym-management/members/AddMemberPage')),
+	RENEW_MEMBER: lazy(() => import('../pages/gym-management/members/RenewMemberPage')),
 	MEMBER_STATS: lazy(() => import('../pages/gym-management/members/MemberStatsPage')),
 	CHECKIN: lazy(() => import('../pages/gym-management/CheckInPage')),
 	MEMBERSHIP_PLANS: lazy(() => import('../pages/gym-management/memberships/MembershipPlansPage')),
@@ -64,6 +65,14 @@ const presentation: RouteProps[] = [
 		element: (
 			<ProtectedRoute requiredPermission='members.edit'>
 				<GYM.ADD_MEMBER />
+			</ProtectedRoute>
+		),
+	},
+	{
+		path: '/gym-management/members/renew/:id',
+		element: (
+			<ProtectedRoute requiredPermission='members.renew'>
+				<GYM.RENEW_MEMBER />
 			</ProtectedRoute>
 		),
 	},

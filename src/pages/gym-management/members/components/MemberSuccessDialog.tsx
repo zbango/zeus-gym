@@ -98,7 +98,6 @@ const MemberSuccessDialog: React.FC<MemberSuccessDialogProps> = ({
 
 	// Generate QR code data (member ID + gym info)
 	const qrData = `MEMBER_ID:${member?.customer?.id}|GYM:Zeus Gym|PHONE:${member?.customer?.phone || ''}`;
-	console.log('qrData', qrData);
 	// Generate QR code on canvas
 	useEffect(() => {
 		if (member && qrCanvasRef.current) {

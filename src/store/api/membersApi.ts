@@ -33,7 +33,7 @@ export const membersApi = createApi({
 		}),
 
 		// Get single customer by ID
-		getMemberById: builder.query<Member, string>({
+		getMemberById: builder.query<{ member: Member }, string>({
 			query: (id) => `admin/customers/${id}`,
 			providesTags: (result, error, id) => [{ type: 'Member', id }],
 		}),

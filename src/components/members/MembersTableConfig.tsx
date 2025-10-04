@@ -15,6 +15,7 @@ import { useDeleteMemberMutation } from '../../store/api/membersApi';
 export const useMembersTableColumns = (
 	onViewProfile?: (member: Member) => void,
 	onEditMember?: (memberId: string) => void,
+	onShowQRCode?: (member: Member) => void,
 ): TableColumn<Member>[] => {
 	const { t } = useTranslation();
 	const { darkModeStatus } = useDarkMode();
@@ -212,6 +213,16 @@ export const useMembersTableColumns = (
 						<DropdownItem
 							onClick={(e: React.MouseEvent) => {
 								e.stopPropagation();
+								onShowQRCode?.(record);
+							}}>
+							<div>
+								<Icon icon='QrCode' className='me-2' />
+								{t('QR Code')}
+							</div>
+						</DropdownItem>
+						{/* <DropdownItem
+							onClick={(e: React.MouseEvent) => {
+								e.stopPropagation();
 								// Navigate to progress view
 								window.location.href = `/gym-management/members/${record.id}/progress`;
 							}}>
@@ -219,9 +230,9 @@ export const useMembersTableColumns = (
 								<Icon icon='TrendingUp' className='me-2' />
 								{t('View Progress')}
 							</div>
-						</DropdownItem>
+						</DropdownItem> */}
 						<DropdownItem isDivider />
-						<DropdownItem
+						{/* <DropdownItem
 							onClick={(e: React.MouseEvent) => {
 								e.stopPropagation();
 								// Navigate to payment history
@@ -231,8 +242,19 @@ export const useMembersTableColumns = (
 								<Icon icon='Payment' className='me-2' />
 								{t('Payment History')}
 							</div>
-						</DropdownItem>
+						</DropdownItem> */}
 						<DropdownItem
+							onClick={(e: React.MouseEvent) => {
+								e.stopPropagation();
+								// Navigate to renewal page
+								window.location.href = `/gym-management/members/renew/${record.id}`;
+							}}>
+							<div>
+								<Icon icon='Refresh' className='me-2' />
+								{t('Renew Membership')}
+							</div>
+						</DropdownItem>
+						{/* <DropdownItem
 							onClick={(e: React.MouseEvent) => {
 								e.stopPropagation();
 								// Navigate to check-in history
@@ -242,7 +264,7 @@ export const useMembersTableColumns = (
 								<Icon icon='LoginTwoTone' className='me-2' />
 								{t('Check-in History')}
 							</div>
-						</DropdownItem>
+						</DropdownItem> */}
 						<DropdownItem isDivider />
 						<DropdownItem
 							onClick={(e: React.MouseEvent) => {

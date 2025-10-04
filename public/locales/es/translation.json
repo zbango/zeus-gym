@@ -768,5 +768,14 @@
 	"Add": "Agregar Pago",
 	"Registered By": "Registrado Por",
 	"cash": "Efectivo",
-	"transfer": "Transferencia"
+	"transfer": "Transferencia",
+	"Renew Membership": "Renovar Membresía",
+	"Renewing...": "Renovando...",
+	"Membership renewed successfully for {{name}}!": "¡Membresía renovada exitosamente para {{name}}!",
+	"An error occurred while renewing the membership. Please try again.": "Ocurrió un error al renovar la membresía. Por favor, inténtalo de nuevo.",
+	"Renew membership for {{name}}": "Renovar membresía para {{name}}",
+	"New Membership Information": "Información de Nueva Membresía",
+	"Member not found": "Miembro no encontrado",
+	"The member you are looking for does not exist.": "El miembro que buscas no existe.",
+	"View Details": "Ver Detalles"
  }

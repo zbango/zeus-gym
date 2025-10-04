@@ -3,7 +3,7 @@
 export interface IMember {
 	id: string;
 	personalInfo: {
-		firstName: string;
+		name: string;
 		lastName: string;
 		email: string;
 		phone: string;

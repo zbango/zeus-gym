@@ -13,6 +13,7 @@ import MembersAdvancedFiltersOffCanvas from './components/MembersAdvancedFilters
 import MemberProfileSidePanel from './components/MemberProfileSidePanel';
 import ActiveFilterBadges from './components/ActiveFilterBadges';
 import EditMemberModal from './components/EditMemberModal';
+import MemberSuccessDialog from './components/MemberSuccessDialog';
 import DynamicTable from '../../../components/table/DynamicTable';
 import { useMembersTableColumns } from '../../../components/members/MembersTableConfig';
 import Card, { CardHeader, CardActions, CardBody } from '../../../components/bootstrap/Card';
@@ -29,6 +30,10 @@ const MembersListPage = () => {
 	// Edit modal state
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [selectedMember, setSelectedMember] = useState<any>(null);
+
+	// QR Code dialog state
+	const [showQRDialog, setShowQRDialog] = useState(false);
+	const [qrMember, setQrMember] = useState<any>(null);
 
 	// Use the comprehensive state management hook
 	const {
@@ -74,6 +79,86 @@ const MembersListPage = () => {
 	// Handle successful edit
 	const handleEditSuccess = () => {
 		refresh(); // Refresh the data after successful edit
+	};
+
+	// Handle QR Code dialog
+	const handleShowQRCode = (member: any) => {
+		setQrMember(member);
+		setShowQRDialog(true);
+	};
+
+	const handleCloseQRDialog = () => {
+		setShowQRDialog(false);
+		setQrMember(null);
+	};
+
+	// Transform Member to MemberCreationResponse format for the dialog
+	const transformMemberForDialog = (member: any) => {
+		return {
+			customer: {
+				id: member.id,
+				name: member.personalInfo.name,
+				lastName: member.personalInfo.lastName,
+				dateOfBirth: member.personalInfo.birthDate || '',
+				email: member.personalInfo.email || '',
+				phone: member.personalInfo.phone || '',
+				address: member.personalInfo.address || '',
+				identification: member.personalInfo.identification || '',
+				medicalConditions: member.healthInfo.medicalConditions || '',
+				status: member.membershipInfo.status,
+				createdAt: member.registrationDate,
+				updatedAt: member.registrationDate,
+			},
+			progress: {
+				id: `${member.id}-progress`,
+				customerId: member.id,
+				isCurrent: true,
+				age: member.healthInfo.age,
+				gender: 'unknown',
+				height: member.healthInfo.height,
+				weight: member.healthInfo.currentWeight,
+				createdAt: member.registrationDate,
+				updatedAt: member.registrationDate,
+			},
+			membership: {
+				id: `${member.id}-membership`,
+				customerId: member.id,
+				membershipPlanId: `${member.id}-plan`,
+				membershipPlan: {
+					id: `${member.id}-plan`,
+					name: member.membershipInfo.plan,
+					type: member.membershipInfo.type,
+					price: 0,
+					duration: member.membershipInfo.type === 'monthly' ? 1 : undefined,
+					description: '',
+					status: 'active',
+					createdAt: member.registrationDate,
+					updatedAt: member.registrationDate,
+				},
+				startDate: member.membershipInfo.startDate,
+				status: member.membershipInfo.status,
+				totalAmount: 0,
+				paidAmount: 0,
+				remainingAmount: 0,
+				createdAt: member.registrationDate,
+				updatedAt: member.registrationDate,
+			},
+			payment: {
+				id: `${member.id}-payment`,
+				customerId: member.id,
+				membershipId: `${member.id}-membership`,
+				customerName: `${member.personalInfo.name} ${member.personalInfo.lastName}`,
+				customerEmail: member.personalInfo.email || '',
+				customerPhone: member.personalInfo.phone || '',
+				membershipPlanName: member.membershipInfo.plan,
+				membershipPlanType: member.membershipInfo.type,
+				amount: 0,
+				paymentMethod: 'cash',
+				status: 'completed',
+				createdAt: member.registrationDate,
+				updatedAt: member.registrationDate,
+			},
+		};
 	};
 
 	// Debug pagination data
@@ -153,6 +238,7 @@ const MembersListPage = () => {
 							columns={useMembersTableColumns(
 								ui.handleViewProfile,
 								handleEditMemberModal,
+								handleShowQRCode,
 							)}
 							loading={isLoading}
 							rowKey='id'
@@ -189,6 +275,15 @@ const MembersListPage = () => {
 					onClose={handleCloseEditModal}
 					member={selectedMember}
 					onSuccess={handleEditSuccess}
+				/>
+
+				{/* QR Code Dialog */}
+				<MemberSuccessDialog
+					isOpen={showQRDialog}
+					onClose={handleCloseQRDialog}
+					member={qrMember ? transformMemberForDialog(qrMember) : null}
+					onNavigateToList={handleCloseQRDialog}
+					onKeepCreating={handleCloseQRDialog}
 				/>
 			</Page>
 		</PageWrapper>

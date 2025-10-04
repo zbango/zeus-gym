@@ -144,36 +144,5 @@ export const usePaymentsTableColumns = (
 				<span className='text-nowrap'>{dayjs(record.createdAt).format('DD/MM/YYYY')}</span>
 			),
 		},
-		{
-			key: 'paymentActions',
-			title: '',
-			width: 120,
-			render: (_, record) => (
-				<div className='d-flex gap-1'>
-					{record.status !== 'completed' && (
-						<>
-							<Button
-								color='success'
-								size='sm'
-								icon='Add'
-								isLight
-								onClick={() => onAddPayment?.(record)}
-								title={t('Add Payment')}>
-								{t('Add')}
-							</Button>
-							{/* <Button
-								color='warning'
-								size='sm'
-								icon='Email'
-								isLight
-								onClick={() => onSendReminder?.(record)}
-								title={t('Send Reminder')}>
-								{t('Remind')}
-							</Button> */}
-						</>
-					)}
-				</div>
-			),
-		},
 	];
 };

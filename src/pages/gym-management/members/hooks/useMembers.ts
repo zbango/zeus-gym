@@ -188,10 +188,10 @@ export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 			const searchLower = localSearch.toLowerCase();
 			filtered = filtered.filter((member) => {
 				return (
-					member.personalInfo.firstName.toLowerCase().includes(searchLower) ||
+					member.personalInfo.name.toLowerCase().includes(searchLower) ||
 					member.personalInfo.lastName.toLowerCase().includes(searchLower) ||
 					member.personalInfo.identification.toLowerCase().includes(searchLower) ||
-					`${member.personalInfo.firstName} ${member.personalInfo.lastName}`
+					`${member.personalInfo.name} ${member.personalInfo.lastName}`
 						.toLowerCase()
 						.includes(searchLower)
 				);

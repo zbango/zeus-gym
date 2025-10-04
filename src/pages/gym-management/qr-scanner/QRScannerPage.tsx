@@ -100,6 +100,14 @@ const QRScannerPage = () => {
 				throw new Error('Video element not found');
 			}
 
+			// Detect if device is a tablet
+			const isTablet = () => {
+				const userAgent = navigator.userAgent.toLowerCase();
+				const isTabletUserAgent = /tablet|ipad|android(?!.*mobile)/i.test(userAgent);
+				const isTabletScreen = window.innerWidth >= 768 && window.innerWidth <= 1024;
+				return isTabletUserAgent || isTabletScreen;
+			};
+
 			// Create QR scanner instance
 			const qrScanner = new QrScanner(
 				videoRef.current,
@@ -155,7 +163,7 @@ const QRScannerPage = () => {
 					}
 				},
 				{
-					preferredCamera: 'environment', // Use back camera
+					preferredCamera: isTablet() ? 'user' : 'environment', // Front camera for tablets, back camera for phones
 					highlightScanRegion: true,
 					highlightCodeOutline: true,
 				},
@@ -284,7 +292,7 @@ const QRScannerPage = () => {
 				setTimeout(() => {
 					startScanner();
 				}, 100);
-			}, 100000);
+			}, 7000);
 
 			return () => clearTimeout(timer);
 		}

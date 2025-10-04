@@ -115,7 +115,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
 		<Modal isOpen={isOpen} setIsOpen={onClose} size='lg' isScrollable>
 			<ModalHeader setIsOpen={onClose}>
 				<h4 className='modal-title'>
-					{t('Edit Member')}: {member?.personalInfo?.firstName}{' '}
+					{t('Edit Member')}: {member?.personalInfo?.name}{' '}
 					{member?.personalInfo?.lastName}
 				</h4>
 			</ModalHeader>

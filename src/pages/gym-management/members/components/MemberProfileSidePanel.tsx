@@ -13,7 +13,6 @@ import Card, {
 	CardLabel,
 	CardTitle,
 } from '../../../../components/bootstrap/Card';
-import Avatar from '../../../../components/Avatar';
 import Icon from '../../../../components/icon/Icon';
 import QRCodeGenerator from '../../../../components/common/QRCodeGenerator';
 import { Member } from '../../../../types/member.types';
@@ -90,7 +89,6 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 					<Card>
 						<CardBody>
 							<div className='d-flex align-items-center gap-3'>
-								<Avatar size={80} className='flex-shrink-0' src='' />
 								<div className='flex-grow-1'>
 									<h4 className='mb-1'>
 										{member.personalInfo.name} {member.personalInfo.lastName}
@@ -114,12 +112,6 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 									</div>
 								</div>
 								<div className='d-flex gap-2'>
-									<Button
-										color='info'
-										icon='QrCode'
-										onClick={() => setShowQRCode(!showQRCode)}>
-										{t('QR Code')}
-									</Button>
 									{onEdit && (
 										<Button
 											color='primary'

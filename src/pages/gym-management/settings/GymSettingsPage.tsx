@@ -201,15 +201,30 @@ const GymSettingsPage = () => {
 								)}
 
 								{passwordErrors.length > 0 && (
-									<Alert color='danger' icon='Error' className='mb-3'>
-										<ul className='mb-0'>
+									<Alert
+										color='danger'
+										icon='Error'
+										className='mb-3 text-white fw-bold'>
+										<ul className='mb-0 '>
 											{passwordErrors.map((error, index) => (
 												<li key={index}>{error}</li>
 											))}
 										</ul>
 									</Alert>
 								)}
+								<div className='col-12'>
+									<div className='alert alert-info text-white'>
+										<div className='mb-0 mt-2'>
+											<Icon icon='Info' className='me-2' />
 
+											<strong>{t('Password Requirements')}:</strong>
+
+											<div>- {t('At least 8 characters long')}</div>
+											<div>- {t('At least one uppercase letter (A-Z)')}</div>
+											<div>- {t('At least one symbol (. ! @ # etc.)')}</div>
+										</div>
+									</div>
+								</div>
 								<div className='row g-3'>
 									<div className='col-12'>
 										<FormGroup
@@ -265,17 +280,7 @@ const GymSettingsPage = () => {
 											/>
 										</FormGroup>
 									</div>
-									<div className='col-12'>
-										<div className='alert alert-info'>
-											<Icon icon='Info' className='me-2' />
-											<strong>{t('Password Requirements:')}</strong>
-											<ul className='mb-0 mt-2'>
-												<li>{t('At least 8 characters long')}</li>
-												<li>{t('At least one uppercase letter (A-Z)')}</li>
-												<li>{t('At least one symbol (. ! @ # etc.)')}</li>
-											</ul>
-										</div>
-									</div>
+
 									<div className='col-12'>
 										<Button
 											color='primary'
@@ -489,9 +494,9 @@ const GymSettingsPage = () => {
 
 					{/* Security Warning */}
 					<div className='col-12'>
-						<div className='alert alert-info'>
+						<div className='alert alert-info text-white fw-bold'>
 							<Icon icon='Security' className='me-2' />
-							<strong>{t('Security Notice:')}</strong>{' '}
+							<strong className='me-2'>{t('Security Notice:')} </strong>
 							{t(
 								'Always logout when using shared computers. Your session will automatically expire after extended periods of inactivity.',
 							)}

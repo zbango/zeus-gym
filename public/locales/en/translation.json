@@ -766,5 +766,14 @@
 	"Monthly ({{duration}} month(s))": "Monthly ({{duration}} month(s))",
 	"Count-based ({{count}} visits)": "Count-based ({{count}} visits)",
 	"Expires": "Expires",
-	"Type": "Type"
+	"Type": "Type",
+	"Renew Membership": "Renew Membership",
+	"Renewing...": "Renewing...",
+	"Membership renewed successfully for {{name}}!": "Membership renewed successfully for {{name}}!",
+	"An error occurred while renewing the membership. Please try again.": "An error occurred while renewing the membership. Please try again.",
+	"Renew membership for {{name}}": "Renew membership for {{name}}",
+	"New Membership Information": "New Membership Information",
+	"Member not found": "Member not found",
+	"The member you are looking for does not exist.": "The member you are looking for does not exist.",
+	"View Details": "View Details"
 }
