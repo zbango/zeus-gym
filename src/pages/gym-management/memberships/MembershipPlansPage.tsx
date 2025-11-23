@@ -43,11 +43,11 @@ const MembershipPlansPage = () => {
 						]}
 					/>
 				</SubHeaderLeft>
-				<SubHeaderRight>
+				{/* <SubHeaderRight>
 					<Button color='success' icon='Add' onClick={handleAddPlan}>
 						{t('Add New Plan')}
 					</Button>
-				</SubHeaderRight>
+				</SubHeaderRight> */}
 			</SubHeader>
 			<Page container='fluid'>
 				<Card>
@@ -84,7 +84,7 @@ const MembershipPlansPage = () => {
 								))}
 
 								{/* Add New Plan Card */}
-								<div className='col-lg-4 col-md-6'>
+								{/* <div className='col-lg-4 col-md-6'>
 									<Card
 										className='h-100 border-dashed cursor-pointer'
 										onClick={handleAddPlan}
@@ -102,7 +102,7 @@ const MembershipPlansPage = () => {
 											</p>
 										</CardBody>
 									</Card>
-								</div>
+								</div> */}
 							</div>
 						</CardBody>
 					</Card>

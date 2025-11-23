@@ -78,19 +78,19 @@ const MembershipPlanCard: React.FC<MembershipPlanCardProps> = ({
 					<div className='d-flex gap-2'>
 						<Button
 							color='info'
-							icon='Edit'
+							icon='Visibility'
 							className='flex-fill'
 							onClick={() => onEdit(plan)}>
-							{t('Edit')}
+							Ver Detalles
 						</Button>
-						<Button
+						{/* <Button
 							color='danger'
 							icon='Delete'
 							className='flex-fill'
 							onClick={() => onDelete(plan.id)}
 							isDisable={saving}>
 							{t('Delete')}
-						</Button>
+						</Button> */}
 					</div>
 				</div>
 			</CardBody>

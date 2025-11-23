@@ -117,7 +117,7 @@ const User = () => {
 									/>
 									<span className='navigation-text'>
 										{isLoggingOut
-											? t('Logging out...')
+											? 'Cerrando sesión...'
 											: (t('menu:Logout') as ReactNode)}
 									</span>
 								</span>

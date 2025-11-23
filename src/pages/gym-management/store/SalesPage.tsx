@@ -272,9 +272,9 @@ const SalesPage = () => {
 					</span>
 				</SubHeaderLeft>
 				<SubHeaderRight>
-					<Button color='success' icon='Add' onClick={() => setShowNewSaleModal(true)}>
+					{/* <Button color='success' icon='Add' onClick={() => setShowNewSaleModal(true)}>
 						{t('New Sale')}
-					</Button>
+					</Button> */}
 					<Button
 						color={themeStatus}
 						icon='Refresh'
@@ -403,7 +403,6 @@ const SalesPage = () => {
 									</th>
 									<th>{t('Payment Method')}</th>
 									<th>{t('Sold By')}</th>
-									<td aria-labelledby='Actions' />
 								</tr>
 							</thead>
 							<tbody>
@@ -471,11 +470,6 @@ const SalesPage = () => {
 										<td>
 											<div className='text-muted'>{sale.soldBy}</div>
 										</td>
-										<td>
-											<Button color='info' size='sm' icon='Receipt' isLight>
-												{t('Receipt')}
-											</Button>
-										</td>
 									</tr>
 								))}
 							</tbody>
@@ -483,7 +477,7 @@ const SalesPage = () => {
 					</CardBody>
 					<PaginationButtons
 						data={items}
-						label='sales'
+						label='ventas'
 						setCurrentPage={setCurrentPage}
 						currentPage={currentPage}
 						perPage={perPage}

@@ -200,7 +200,7 @@ export const useMembersTableColumns = (
 								{t('View Profile')}
 							</div>
 						</DropdownItem>
-						<DropdownItem
+						{/* <DropdownItem
 							onClick={(e: React.MouseEvent) => {
 								e.stopPropagation();
 								onEditMember?.(record.id);
@@ -219,7 +219,7 @@ export const useMembersTableColumns = (
 								<Icon icon='QrCode' className='me-2' />
 								{t('QR Code')}
 							</div>
-						</DropdownItem>
+						</DropdownItem> */}
 						{/* <DropdownItem
 							onClick={(e: React.MouseEvent) => {
 								e.stopPropagation();
@@ -243,7 +243,7 @@ export const useMembersTableColumns = (
 								{t('Payment History')}
 							</div>
 						</DropdownItem> */}
-						<DropdownItem
+						{/* <DropdownItem
 							onClick={(e: React.MouseEvent) => {
 								e.stopPropagation();
 								// Navigate to renewal page
@@ -253,7 +253,7 @@ export const useMembersTableColumns = (
 								<Icon icon='Refresh' className='me-2' />
 								{t('Renew Membership')}
 							</div>
-						</DropdownItem>
+						</DropdownItem> */}
 						{/* <DropdownItem
 							onClick={(e: React.MouseEvent) => {
 								e.stopPropagation();
@@ -265,7 +265,7 @@ export const useMembersTableColumns = (
 								{t('Check-in History')}
 							</div>
 						</DropdownItem> */}
-						<DropdownItem isDivider />
+						{/* <DropdownItem isDivider />
 						<DropdownItem
 							onClick={(e: React.MouseEvent) => {
 								e.stopPropagation();
@@ -279,7 +279,7 @@ export const useMembersTableColumns = (
 								<Icon icon='Delete' className='me-2' />
 								{isDeleting ? t('Deleting...') : t('Delete Member')}
 							</div>
-						</DropdownItem>
+						</DropdownItem> */}
 					</DropdownMenu>
 				</Dropdown>
 			),

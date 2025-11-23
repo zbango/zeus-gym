@@ -19,11 +19,11 @@ const UsersListActions: React.FC<UsersListActionsProps> = ({
 
 	return (
 		<>
-			{hasPermission('users.create') && (
+			{/* {hasPermission('users.create') && (
 				<Button color='success' icon='PersonAdd' onClick={onAddUser}>
 					{t('Add User')}
 				</Button>
-			)}
+			)} */}
 			<Button color={themeStatus} icon='Refresh' isLight onClick={onRefresh}>
 				{t('Refresh')}
 			</Button>

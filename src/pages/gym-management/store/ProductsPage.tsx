@@ -251,9 +251,9 @@ const ProductsPage = () => {
 					</span>
 				</SubHeaderLeft>
 				<SubHeaderRight>
-					<Button color='success' icon='Add' onClick={handleAddProduct}>
+					{/* <Button color='success' icon='Add' onClick={handleAddProduct}>
 						{t('Add Product')}
-					</Button>
+					</Button> */}
 					<Button
 						color={themeStatus}
 						icon='Refresh'

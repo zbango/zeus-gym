@@ -6,7 +6,6 @@ import OffCanvas, {
 	OffCanvasHeader,
 	OffCanvasTitle,
 } from '../../../../components/bootstrap/OffCanvas';
-import Button from '../../../../components/bootstrap/Button';
 import Card, {
 	CardBody,
 	CardHeader,
@@ -14,7 +13,6 @@ import Card, {
 	CardTitle,
 } from '../../../../components/bootstrap/Card';
 import Icon from '../../../../components/icon/Icon';
-import QRCodeGenerator from '../../../../components/common/QRCodeGenerator';
 import { Member } from '../../../../types/member.types';
 
 interface MemberProfileSidePanelProps {
@@ -31,7 +29,6 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 	onEdit,
 }) => {
 	const { t } = useTranslation();
-	const [showQRCode, setShowQRCode] = React.useState(false);
 
 	if (!member) return null;
 
@@ -77,13 +74,13 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 			<OffCanvasBody>
 				<div className='d-flex flex-column gap-4'>
 					{/* QR Code Section */}
-					{showQRCode && (
+					{/* 					{showQRCode && (
 						<QRCodeGenerator
 							memberId={member.id}
 							memberName={`${member.personalInfo.name} ${member.personalInfo.lastName}`}
 							onClose={() => setShowQRCode(false)}
 						/>
-					)}
+					)} */}
 
 					{/* Member Header */}
 					<Card>
@@ -111,7 +108,7 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 										</span>
 									</div>
 								</div>
-								<div className='d-flex gap-2'>
+								{/* <div className='d-flex gap-2'>
 									{onEdit && (
 										<Button
 											color='primary'
@@ -123,7 +120,7 @@ const MemberProfileSidePanel: React.FC<MemberProfileSidePanelProps> = ({
 											{t('Edit')}
 										</Button>
 									)}
-								</div>
+								</div> */}
 							</div>
 						</CardBody>
 					</Card>

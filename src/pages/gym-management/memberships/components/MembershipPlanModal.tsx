@@ -276,14 +276,14 @@ const MembershipPlanModal: React.FC<MembershipPlanModalProps> = ({
 					<Button color='secondary' onClick={onClose}>
 						{t('Cancel')}
 					</Button>
-					<Button
+					{/* <Button
 						type='submit'
 						color='primary'
 						icon={editingPlan ? 'Save' : 'Add'}
 						isDisable={!formik.isValid || saving}>
 						{saving && <Spinner isSmall inButton />}
 						{editingPlan ? t('Update Plan') : t('Create Plan')}
-					</Button>
+					</Button> */}
 				</ModalFooter>
 			</form>
 		</Modal>

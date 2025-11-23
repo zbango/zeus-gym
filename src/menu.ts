@@ -92,12 +92,12 @@ export const demoPagesMenu = {
 				path: 'gym-management/members/list',
 				icon: 'PersonSearch',
 			},
-			addMember: {
-				id: 'addMember',
-				text: 'Add Member',
-				path: 'gym-management/members/add',
-				icon: 'PersonAdd',
-			},
+			// addMember: {
+			// 	id: 'addMember',
+			// 	text: 'Add Member',
+			// 	path: 'gym-management/members/add',
+			// 	icon: 'PersonAdd',
+			// },
 		},
 	},
 	gymMemberships: {
@@ -144,12 +144,12 @@ export const demoPagesMenu = {
 				path: 'gym-management/store/sales',
 				icon: 'PointOfSale',
 			},
-			inventory: {
-				id: 'inventory',
-				text: 'Inventory',
-				path: 'gym-management/store/inventory',
-				icon: 'Warehouse',
-			},
+			// inventory: {
+			// 	id: 'inventory',
+			// 	text: 'Inventory',
+			// 	path: 'gym-management/store/inventory',
+			// 	icon: 'Warehouse',
+			// },
 		},
 	},
 	gymUsers: {
@@ -158,7 +158,7 @@ export const demoPagesMenu = {
 		path: 'gym-management/users',
 		icon: 'SupervisorAccount',
 	},
-	gymSettings: {
+	/* 	gymSettings: {
 		id: 'gymSettings',
 		text: 'Settings',
 		path: 'gym-management/settings',
@@ -169,7 +169,7 @@ export const demoPagesMenu = {
 		text: 'QR Scanner',
 		path: 'gym-management/qr-scanner',
 		icon: 'QrCode',
-	},
+	}, */
 };
 
 export const pageLayoutTypesPagesMenu = {

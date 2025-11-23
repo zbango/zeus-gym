@@ -17,11 +17,11 @@ const MembersListActions: React.FC<MembersListActionsProps> = ({ onRefresh, onAd
 					{t('Refresh')}
 				</Button>
 			)}
-			{onAddMember && (
+			{/* {onAddMember && (
 				<Button color='success' icon='PersonAdd' tag='a' to='/gym-management/members/add'>
 					{t('Add New Member')}
 				</Button>
-			)}
+			)} */}
 		</div>
 	);
 };

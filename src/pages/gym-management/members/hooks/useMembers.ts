@@ -179,7 +179,7 @@ export const useMembers = (initialParams?: Partial<MemberListParams>) => {
 	);
 
 	// Local filtering logic
-	const allMembers = membersData?.members || [];
+	const allMembers = membersData?.customers || [];
 	const filteredMembers = useMemo(() => {
 		let filtered = allMembers;
 

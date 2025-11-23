@@ -124,7 +124,7 @@ export const useUsersTableColumns = (
 				</div>
 			),
 		},
-		{
+		/* 		{
 			key: 'moreActions',
 			title: '',
 			dataIndex: 'id',
@@ -199,6 +199,6 @@ export const useUsersTableColumns = (
 					</DropdownMenu>
 				</Dropdown>
 			),
-		},
+		}, */
 	];
 };

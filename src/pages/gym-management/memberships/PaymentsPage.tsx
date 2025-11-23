@@ -38,11 +38,6 @@ import Textarea from '../../../components/bootstrap/forms/Textarea';
 import Spinner from '../../../components/bootstrap/Spinner';
 import Alert from '../../../components/bootstrap/Alert';
 import dayjs from 'dayjs';
-import {
-	useGetMembersQuery,
-	useGetCustomerByIdentificationQuery,
-} from '../../../store/api/membersApi';
-import { useGetMembershipPlansQuery } from '../../../store/api/membershipPlansApi';
 
 const PaymentsPage = () => {
 	const { t } = useTranslation();
@@ -288,9 +283,9 @@ const PaymentsPage = () => {
 					/>
 				</SubHeaderLeft>
 				<SubHeaderRight>
-					<Button color='success' icon='Add' onClick={handleOpenModal}>
+					{/* <Button color='success' icon='Add' onClick={handleOpenModal}>
 						{t('Record New Payment')}
-					</Button>
+					</Button> */}
 					<Button color='info' icon='Refresh' isLight onClick={handleRefresh}>
 						{t('Refresh Data')}
 					</Button>
